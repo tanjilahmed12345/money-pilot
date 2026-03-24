@@ -1,11 +1,16 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { StatCards } from "@/components/dashboard/StatCards";
 import { RecentTransactions } from "@/components/dashboard/RecentTransactions";
-import { QuickExpenseChart } from "@/components/dashboard/QuickExpenseChart";
 import { MonthlyComparison } from "@/components/dashboard/MonthlyComparison";
 import { TopSpending } from "@/components/dashboard/TopSpending";
 import { StatsBar } from "@/components/dashboard/StatsBar";
+
+const QuickExpenseChart = dynamic(
+  () => import("@/components/dashboard/QuickExpenseChart").then((m) => m.QuickExpenseChart),
+  { ssr: false, loading: () => <div className="h-[350px] rounded-xl border border-[var(--border)] bg-[var(--card)] animate-pulse" /> }
+);
 
 export default function DashboardPage() {
   return (

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useStore } from "@/store";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -12,17 +13,16 @@ export function RecentTransactions() {
   const categories = useStore((s) => s.categories);
   const currency = useStore((s) => s.settings.currency);
 
-  const recent = transactions.slice(0, 5);
-  const catMap = Object.fromEntries(categories.map((c) => [c.id, c]));
+  const { recent, catMap } = useMemo(() => ({
+    recent: transactions.slice(0, 5),
+    catMap: Object.fromEntries(categories.map((c) => [c.id, c])),
+  }), [transactions, categories]);
 
   return (
     <Card>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-[var(--card-foreground)]">Recent Transactions</h2>
-        <Link
-          href="/transactions"
-          className="text-sm text-[var(--primary)] hover:underline"
-        >
+        <Link href="/transactions" className="text-sm text-[var(--primary)] hover:underline">
           View all
         </Link>
       </div>
@@ -33,10 +33,7 @@ export function RecentTransactions() {
           {recent.map((t) => {
             const cat = catMap[t.category];
             return (
-              <div
-                key={t.id}
-                className="flex items-center justify-between rounded-lg border border-[var(--border)] px-4 py-3"
-              >
+              <div key={t.id} className="flex items-center justify-between rounded-lg border border-[var(--border)] px-4 py-3">
                 <div className="flex items-center gap-3">
                   <span className="text-xl">{cat?.icon || "📦"}</span>
                   <div>

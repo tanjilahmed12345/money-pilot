@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useStore } from "@/store";
 import { Card } from "@/components/ui/Card";
 import { formatCurrency, getTopCategories, getThisMonthTransactions, getTotalExpense } from "@/utils";
@@ -9,10 +10,14 @@ export function TopSpending() {
   const categories = useStore((s) => s.categories);
   const currency = useStore((s) => s.settings.currency);
 
-  const monthTx = getThisMonthTransactions(transactions);
-  const totalMonthExpense = getTotalExpense(monthTx);
-  const top = getTopCategories(monthTx, 5);
-  const catMap = Object.fromEntries(categories.map((c) => [c.id, c]));
+  const { top, totalMonthExpense, catMap } = useMemo(() => {
+    const monthTx = getThisMonthTransactions(transactions);
+    return {
+      top: getTopCategories(monthTx, 5),
+      totalMonthExpense: getTotalExpense(monthTx),
+      catMap: Object.fromEntries(categories.map((c) => [c.id, c])),
+    };
+  }, [transactions, categories]);
 
   if (top.length === 0) return null;
 
@@ -44,10 +49,7 @@ export function TopSpending() {
               <div className="h-2 rounded-full bg-[var(--secondary)] overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-500"
-                  style={{
-                    width: `${pct}%`,
-                    backgroundColor: cat?.color || "#6b7280",
-                  }}
+                  style={{ width: `${pct}%`, backgroundColor: cat?.color || "#6b7280" }}
                 />
               </div>
             </div>

@@ -1,9 +1,26 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/Card";
-import { CategoryPieChart } from "@/components/charts/CategoryPieChart";
-import { MonthlyBarChart } from "@/components/charts/MonthlyBarChart";
-import { SpendingTrendChart } from "@/components/charts/SpendingTrendChart";
+
+const ChartPlaceholder = () => (
+  <div className="h-[350px] animate-pulse rounded-lg bg-[var(--secondary)]" />
+);
+
+const CategoryPieChart = dynamic(
+  () => import("@/components/charts/CategoryPieChart").then((m) => m.CategoryPieChart),
+  { ssr: false, loading: ChartPlaceholder }
+);
+
+const MonthlyBarChart = dynamic(
+  () => import("@/components/charts/MonthlyBarChart").then((m) => m.MonthlyBarChart),
+  { ssr: false, loading: ChartPlaceholder }
+);
+
+const SpendingTrendChart = dynamic(
+  () => import("@/components/charts/SpendingTrendChart").then((m) => m.SpendingTrendChart),
+  { ssr: false, loading: ChartPlaceholder }
+);
 
 export default function AnalyticsPage() {
   return (

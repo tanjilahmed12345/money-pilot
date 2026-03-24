@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useStore } from "@/store";
 import { getMonthlyData, getMonthName } from "@/utils";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
@@ -8,10 +9,10 @@ export function SpendingTrendChart() {
   const transactions = useStore((s) => s.transactions);
   const currency = useStore((s) => s.settings.currency);
 
-  const data = getMonthlyData(transactions).map((d) => ({
-    ...d,
-    name: getMonthName(d.month),
-  }));
+  const data = useMemo(
+    () => getMonthlyData(transactions).map((d) => ({ ...d, name: getMonthName(d.month) })),
+    [transactions]
+  );
 
   if (data.length === 0) {
     return <div className="flex items-center justify-center h-[300px] text-[var(--muted-foreground)]">No data</div>;
@@ -33,8 +34,8 @@ export function SpendingTrendChart() {
           }}
         />
         <Legend />
-        <Line type="monotone" dataKey="expense" stroke="var(--destructive)" name="Expense" strokeWidth={2} dot={{ r: 4 }} />
-        <Line type="monotone" dataKey="income" stroke="var(--success)" name="Income" strokeWidth={2} dot={{ r: 4 }} />
+        <Line type="monotone" dataKey="expense" stroke="var(--destructive)" name="Expense" strokeWidth={2} dot={{ r: 4 }} isAnimationActive={false} />
+        <Line type="monotone" dataKey="income" stroke="var(--success)" name="Income" strokeWidth={2} dot={{ r: 4 }} isAnimationActive={false} />
       </LineChart>
     </ResponsiveContainer>
   );

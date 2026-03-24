@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useStore } from "@/store";
 import { getCategoryExpenses } from "@/utils";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, PieLabelRenderProps } from "recharts";
@@ -9,16 +10,18 @@ export function CategoryPieChart() {
   const categories = useStore((s) => s.categories);
   const currency = useStore((s) => s.settings.currency);
 
-  const catMap = Object.fromEntries(categories.map((c) => [c.id, c]));
-  const expenses = getCategoryExpenses(transactions);
-
-  const data = Object.entries(expenses)
-    .map(([catId, amount]) => ({
-      name: catMap[catId]?.name || catId,
-      value: amount,
-      color: catMap[catId]?.color || "#6b7280",
-    }))
-    .sort((a, b) => b.value - a.value);
+  const { data } = useMemo(() => {
+    const catMap = Object.fromEntries(categories.map((c) => [c.id, c]));
+    const expenses = getCategoryExpenses(transactions);
+    const data = Object.entries(expenses)
+      .map(([catId, amount]) => ({
+        name: catMap[catId]?.name || catId,
+        value: amount,
+        color: catMap[catId]?.color || "#6b7280",
+      }))
+      .sort((a, b) => b.value - a.value);
+    return { data };
+  }, [transactions, categories]);
 
   if (data.length === 0) {
     return <div className="flex items-center justify-center h-[300px] text-[var(--muted-foreground)]">No expense data</div>;
@@ -36,6 +39,7 @@ export function CategoryPieChart() {
           paddingAngle={3}
           dataKey="value"
           label={(props: PieLabelRenderProps) => `${props.name || ""} ${((Number(props.percent) || 0) * 100).toFixed(0)}%`}
+          isAnimationActive={false}
         >
           {data.map((entry, i) => (
             <Cell key={i} fill={entry.color} />

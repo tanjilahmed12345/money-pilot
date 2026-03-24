@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useStore } from "@/store";
 import { Card } from "@/components/ui/Card";
 import { getCategoryExpenses } from "@/utils";
@@ -10,14 +11,15 @@ export function QuickExpenseChart() {
   const categories = useStore((s) => s.categories);
   const currency = useStore((s) => s.settings.currency);
 
-  const catMap = Object.fromEntries(categories.map((c) => [c.id, c]));
-  const expenses = getCategoryExpenses(transactions);
-
-  const data = Object.entries(expenses).map(([catId, amount]) => ({
-    name: catMap[catId]?.name || catId,
-    value: amount,
-    color: catMap[catId]?.color || "#6b7280",
-  }));
+  const data = useMemo(() => {
+    const catMap = Object.fromEntries(categories.map((c) => [c.id, c]));
+    const expenses = getCategoryExpenses(transactions);
+    return Object.entries(expenses).map(([catId, amount]) => ({
+      name: catMap[catId]?.name || catId,
+      value: amount,
+      color: catMap[catId]?.color || "#6b7280",
+    }));
+  }, [transactions, categories]);
 
   if (data.length === 0) return null;
 
@@ -34,6 +36,7 @@ export function QuickExpenseChart() {
             outerRadius={90}
             paddingAngle={3}
             dataKey="value"
+            isAnimationActive={false}
           >
             {data.map((entry, i) => (
               <Cell key={i} fill={entry.color} />

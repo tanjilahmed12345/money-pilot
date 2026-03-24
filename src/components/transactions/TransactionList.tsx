@@ -1,6 +1,8 @@
 "use client";
 
+import { useMemo, useCallback } from "react";
 import { useStore } from "@/store";
+import { useShallowStore } from "@/hooks/useShallowStore";
 import { Transaction } from "@/types";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -13,11 +15,19 @@ interface TransactionListProps {
 }
 
 export function TransactionList({ transactions, onEdit }: TransactionListProps) {
-  const { deleteTransaction, addTransaction } = useStore();
-  const categories = useStore((s) => s.categories);
-  const currency = useStore((s) => s.settings.currency);
+  const { categories, currency } = useShallowStore((s) => ({
+    categories: s.categories,
+    currency: s.settings.currency,
+  }));
+  const deleteTransaction = useStore((s) => s.deleteTransaction);
+  const addTransaction = useStore((s) => s.addTransaction);
 
-  const duplicateTransaction = (t: Transaction) => {
+  const catMap = useMemo(
+    () => Object.fromEntries(categories.map((c) => [c.id, c])),
+    [categories]
+  );
+
+  const duplicateTransaction = useCallback((t: Transaction) => {
     addTransaction({
       title: t.title,
       amount: t.amount,
@@ -26,9 +36,7 @@ export function TransactionList({ transactions, onEdit }: TransactionListProps) 
       date: new Date().toISOString().split("T")[0],
       notes: t.notes,
     });
-  };
-
-  const catMap = Object.fromEntries(categories.map((c) => [c.id, c]));
+  }, [addTransaction]);
 
   if (transactions.length === 0) {
     return <EmptyState title="No transactions found" description="Try adjusting your filters or add a new transaction" />;
