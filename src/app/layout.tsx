@@ -7,6 +7,19 @@ export const metadata: Metadata = {
   description: "Track your income, expenses, and budgets with MoneyPilot",
 };
 
+// Blocking script that runs before React hydration to prevent FOUC.
+// Reads the stored theme from localStorage and applies the dark class immediately.
+const themeScript = `
+(function() {
+  try {
+    var stored = JSON.parse(localStorage.getItem('money-pilot-storage') || '{}');
+    var theme = stored.state && stored.state.settings && stored.state.settings.theme;
+    var isDark = theme === 'dark' || (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (isDark) document.documentElement.classList.add('dark');
+  } catch(e) {}
+})();
+`;
+
 export default function RootLayout({
   children,
 }: {
@@ -14,6 +27,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="antialiased">
         <ClientLayout>{children}</ClientLayout>
       </body>

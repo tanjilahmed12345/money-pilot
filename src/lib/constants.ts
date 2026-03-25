@@ -13,7 +13,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
 ];
 
 export const DEFAULT_SETTINGS: Settings = {
-  theme: "light",
+  theme: "system",
   currency: "৳",
 };
 

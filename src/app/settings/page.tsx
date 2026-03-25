@@ -103,6 +103,7 @@ export default function SettingsPage() {
             value={settings.theme}
             onChange={(e) => setTheme(e.target.value as ThemeMode)}
             options={[
+              { value: "system", label: "System Default" },
               { value: "light", label: "Light" },
               { value: "dark", label: "Dark" },
             ]}

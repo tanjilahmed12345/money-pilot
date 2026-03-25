@@ -25,7 +25,7 @@ export interface Budget {
 }
 
 export type Currency = "৳" | "$" | "€";
-export type ThemeMode = "light" | "dark";
+export type ThemeMode = "light" | "dark" | "system";
 
 export interface Settings {
   theme: ThemeMode;
