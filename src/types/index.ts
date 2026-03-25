@@ -50,6 +50,7 @@ export interface SavingsGoal {
   color: string;
   icon: string;
   deadline: string; // ISO date string
+  category?: string; // linked savings category id
 }
 
 export interface FilterState {

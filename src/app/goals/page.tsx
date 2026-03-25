@@ -1,20 +1,49 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useStore } from "@/store";
 import { SavingsGoal } from "@/types";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { Modal } from "@/components/ui/Modal";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ProgressRing } from "@/components/ui/ProgressRing";
 import { formatCurrency, formatDate } from "@/utils";
 import { useToast } from "@/components/ui/Toast";
+
+function getDaysRemaining(deadline: string): number | null {
+  if (!deadline) return null;
+  const diff = new Date(deadline).getTime() - Date.now();
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+function getMonthsRemaining(deadline: string): number | null {
+  if (!deadline) return null;
+  const now = new Date();
+  const end = new Date(deadline);
+  return (end.getFullYear() - now.getFullYear()) * 12 + (end.getMonth() - now.getMonth()) + (end.getDate() >= now.getDate() ? 0 : -1);
+}
+
+function getRequiredMonthly(remaining: number, deadline: string): number | null {
+  const months = getMonthsRemaining(deadline);
+  if (months === null || months <= 0) return null;
+  return remaining / months;
+}
+
+function getEstimatedCompletion(remaining: number, monthlySavingsRate: number): string | null {
+  if (monthlySavingsRate <= 0 || remaining <= 0) return null;
+  const months = Math.ceil(remaining / monthlySavingsRate);
+  const est = new Date();
+  est.setMonth(est.getMonth() + months);
+  return est.toISOString().split("T")[0];
+}
 
 export default function GoalsPage() {
   const {
     savingsGoals, addSavingsGoal, updateSavingsGoal, deleteSavingsGoal,
-    addToSavings, withdrawFromSavings, settings,
+    addToSavings, withdrawFromSavings, settings, categories, transactions,
   } = useStore();
   const currency = settings.currency;
   const { toast } = useToast();
@@ -27,12 +56,33 @@ export default function GoalsPage() {
   const [icon, setIcon] = useState("");
   const [color, setColor] = useState("#3b82f6");
   const [deadline, setDeadline] = useState("");
+  const [linkedCategory, setLinkedCategory] = useState("");
   const [fundAmount, setFundAmount] = useState("");
   const [fundAction, setFundAction] = useState<"add" | "withdraw">("add");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Estimate monthly savings rate from last 3 months of income - expense
+  const monthlySavingsRate = useMemo(() => {
+    const now = new Date();
+    let totalSaved = 0;
+    let months = 0;
+    for (let i = 1; i <= 3; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const prefix = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const monthTx = transactions.filter((t) => t.date.startsWith(prefix));
+      if (monthTx.length === 0) continue;
+      const inc = monthTx.filter((t) => t.type === "income").reduce((s, t) => s + t.amount, 0);
+      const exp = monthTx.filter((t) => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+      totalSaved += inc - exp;
+      months++;
+    }
+    return months > 0 ? Math.max(totalSaved / months, 0) : 0;
+  }, [transactions]);
+
   const totalSaved = savingsGoals.reduce((sum, g) => sum + g.savedAmount, 0);
   const totalTarget = savingsGoals.reduce((sum, g) => sum + g.targetAmount, 0);
+
+  const catMap = Object.fromEntries(categories.map((c) => [c.id, c]));
 
   const openAdd = () => {
     setEditItem(null);
@@ -41,6 +91,7 @@ export default function GoalsPage() {
     setIcon("");
     setColor("#3b82f6");
     setDeadline("");
+    setLinkedCategory("");
     setErrors({});
     setModalOpen(true);
   };
@@ -52,6 +103,7 @@ export default function GoalsPage() {
     setIcon(g.icon);
     setColor(g.color);
     setDeadline(g.deadline);
+    setLinkedCategory(g.category || "");
     setErrors({});
     setModalOpen(true);
   };
@@ -74,6 +126,7 @@ export default function GoalsPage() {
       icon: icon.trim(),
       color,
       deadline,
+      category: linkedCategory || undefined,
     };
     if (editItem) {
       updateSavingsGoal(editItem.id, data);
@@ -103,6 +156,11 @@ export default function GoalsPage() {
     setFundModal(null);
   };
 
+  const categoryOptions = [
+    { value: "", label: "None (unlinked)" },
+    ...categories.map((c) => ({ value: c.id, label: `${c.icon} ${c.name}` })),
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -120,19 +178,25 @@ export default function GoalsPage() {
 
       {/* Summary Cards */}
       {savingsGoals.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
           <Card>
             <p className="text-sm text-[var(--muted-foreground)]">Total Saved</p>
-            <p className="mt-1 text-xl font-bold text-[var(--success)]">{formatCurrency(totalSaved, currency)}</p>
+            <p className="mt-1 text-xl font-bold text-[var(--success)] tabular-nums">{formatCurrency(totalSaved, currency)}</p>
           </Card>
           <Card>
             <p className="text-sm text-[var(--muted-foreground)]">Total Target</p>
-            <p className="mt-1 text-xl font-bold text-[var(--primary)]">{formatCurrency(totalTarget, currency)}</p>
+            <p className="mt-1 text-xl font-bold text-[var(--primary)] tabular-nums">{formatCurrency(totalTarget, currency)}</p>
           </Card>
           <Card>
             <p className="text-sm text-[var(--muted-foreground)]">Overall Progress</p>
             <p className="mt-1 text-xl font-bold text-[var(--foreground)]">
               {totalTarget > 0 ? ((totalSaved / totalTarget) * 100).toFixed(1) : 0}%
+            </p>
+          </Card>
+          <Card>
+            <p className="text-sm text-[var(--muted-foreground)]">Avg Monthly Savings</p>
+            <p className="mt-1 text-xl font-bold text-[var(--foreground)] tabular-nums">
+              {formatCurrency(monthlySavingsRate, currency)}
             </p>
           </Card>
         </div>
@@ -151,87 +215,118 @@ export default function GoalsPage() {
             const pct = Math.min((g.savedAmount / g.targetAmount) * 100, 100);
             const isComplete = g.savedAmount >= g.targetAmount;
             const remaining = Math.max(g.targetAmount - g.savedAmount, 0);
-            const isOverdue = g.deadline && new Date(g.deadline) < new Date() && !isComplete;
+            const daysLeft = getDaysRemaining(g.deadline);
+            const isOverdue = daysLeft !== null && daysLeft < 0 && !isComplete;
+            const requiredMonthly = getRequiredMonthly(remaining, g.deadline);
+            const estCompletion = getEstimatedCompletion(remaining, monthlySavingsRate);
+            const behindPace = requiredMonthly !== null && monthlySavingsRate > 0 && requiredMonthly > monthlySavingsRate;
+            const linkedCat = g.category ? catMap[g.category] : null;
 
             return (
               <Card key={g.id} className={isComplete ? "border-[var(--success)]/40" : ""}>
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl"
-                      style={{ backgroundColor: `${g.color}15` }}
-                    >
-                      {g.icon}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-[var(--card-foreground)]">{g.name}</p>
-                      {g.deadline && (
-                        <p className={`text-xs mt-0.5 ${isOverdue ? "text-[var(--destructive)] font-medium" : "text-[var(--muted-foreground)]"}`}>
-                          {isOverdue ? "Overdue" : "Deadline"}: {formatDate(g.deadline)}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => openEdit(g)}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                      </svg>
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => { deleteSavingsGoal(g.id); toast("Goal deleted"); }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--destructive)" strokeWidth="2">
-                        <path d="M18 6L6 18M6 6l12 12" />
-                      </svg>
-                    </Button>
-                  </div>
-                </div>
+                <div className="flex items-start gap-4">
+                  {/* Progress Ring */}
+                  <ProgressRing
+                    percent={pct}
+                    size={80}
+                    strokeWidth={7}
+                    color={isComplete ? "var(--success)" : g.color}
+                  >
+                    <span className="text-sm font-bold text-[var(--card-foreground)]">
+                      {pct.toFixed(0)}%
+                    </span>
+                  </ProgressRing>
 
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-[var(--muted-foreground)]">
-                      {formatCurrency(g.savedAmount, currency)}
-                    </span>
-                    <span className="font-medium text-[var(--card-foreground)]">
-                      {formatCurrency(g.targetAmount, currency)}
-                    </span>
-                  </div>
-                  <div className="h-4 rounded-full bg-[var(--secondary)] overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-700"
-                      style={{
-                        width: `${pct}%`,
-                        backgroundColor: isComplete ? "var(--success)" : g.color,
-                      }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span style={{ color: isComplete ? "var(--success)" : g.color }} className="font-medium">
-                      {pct.toFixed(1)}% {isComplete && "- Goal reached!"}
-                    </span>
-                    {!isComplete && (
-                      <span className="text-[var(--muted-foreground)]">
-                        {formatCurrency(remaining, currency)} to go
+                  {/* Details */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">{g.icon}</span>
+                          <p className="font-semibold text-[var(--card-foreground)]">{g.name}</p>
+                        </div>
+                        {linkedCat && (
+                          <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
+                            {linkedCat.icon} {linkedCat.name}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <Button variant="ghost" size="sm" onClick={() => openEdit(g)}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                          </svg>
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => { deleteSavingsGoal(g.id); toast("Goal deleted"); }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--destructive)" strokeWidth="2">
+                            <path d="M18 6L6 18M6 6l12 12" />
+                          </svg>
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Amounts */}
+                    <div className="flex items-baseline gap-1 mt-2">
+                      <span className="text-lg font-bold tabular-nums" style={{ color: isComplete ? "var(--success)" : g.color }}>
+                        {formatCurrency(g.savedAmount, currency)}
                       </span>
+                      <span className="text-sm text-[var(--muted-foreground)]">
+                        / {formatCurrency(g.targetAmount, currency)}
+                      </span>
+                    </div>
+
+                    {/* Deadline & countdown */}
+                    {g.deadline && (
+                      <div className="mt-2">
+                        {isComplete ? (
+                          <p className="text-xs font-medium text-[var(--success)]">Goal reached!</p>
+                        ) : isOverdue ? (
+                          <p className="text-xs font-medium text-[var(--destructive)]">
+                            Overdue by {Math.abs(daysLeft!)} day{Math.abs(daysLeft!) !== 1 ? "s" : ""}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-[var(--muted-foreground)]">
+                            <span className="font-medium text-[var(--card-foreground)]">{daysLeft} day{daysLeft !== 1 ? "s" : ""}</span> remaining · {formatDate(g.deadline)}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Pace message */}
+                    {!isComplete && remaining > 0 && (
+                      <div className="mt-2 space-y-1">
+                        {behindPace && requiredMonthly !== null && (
+                          <p className="text-xs font-medium text-[var(--warning)]">
+                            You need to save {formatCurrency(requiredMonthly, currency)}/month to hit your goal
+                          </p>
+                        )}
+                        {!behindPace && requiredMonthly !== null && monthlySavingsRate > 0 && (
+                          <p className="text-xs text-[var(--success)]">
+                            On pace — saving {formatCurrency(monthlySavingsRate, currency)}/month
+                          </p>
+                        )}
+                        {estCompletion && !g.deadline && (
+                          <p className="text-xs text-[var(--muted-foreground)]">
+                            Est. completion: {formatDate(estCompletion)}
+                          </p>
+                        )}
+                        {estCompletion && g.deadline && (
+                          <p className="text-xs text-[var(--muted-foreground)]">
+                            At current rate: {formatDate(estCompletion)}
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
 
-                <div className="flex gap-2 pt-3 border-t border-[var(--border)]">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => openFund(g, "add")}
-                  >
+                {/* Fund actions */}
+                <div className="flex gap-2 pt-3 mt-3 border-t border-[var(--border)]">
+                  <Button variant="primary" size="sm" className="flex-1" onClick={() => openFund(g, "add")}>
                     + Add Funds
                   </Button>
                   {g.savedAmount > 0 && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => openFund(g, "withdraw")}
-                    >
+                    <Button variant="secondary" size="sm" className="flex-1" onClick={() => openFund(g, "withdraw")}>
                       - Withdraw
                     </Button>
                   )}
@@ -251,6 +346,16 @@ export default function GoalsPage() {
           <Input label="Target Amount" id="goal-target" type="number" min="0" step="0.01" value={targetAmount} onChange={(e) => setTargetAmount(e.target.value)} placeholder="0.00" />
           {errors.target && <p className="text-xs text-[var(--destructive)] -mt-3">{errors.target}</p>}
 
+          <Input label="Target Date (optional)" id="goal-deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
+
+          <Select
+            label="Linked Category (optional)"
+            id="goal-category"
+            value={linkedCategory}
+            onChange={(e) => setLinkedCategory(e.target.value)}
+            options={categoryOptions}
+          />
+
           <Input label="Icon (emoji)" id="goal-icon" value={icon} onChange={(e) => setIcon(e.target.value)} placeholder="e.g., 🏖️" />
           {errors.icon && <p className="text-xs text-[var(--destructive)] -mt-3">{errors.icon}</p>}
 
@@ -261,8 +366,6 @@ export default function GoalsPage() {
               <span className="text-sm text-[var(--muted-foreground)]">{color}</span>
             </div>
           </div>
-
-          <Input label="Deadline (optional)" id="goal-deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
 
           <div className="flex gap-3 pt-2">
             <Button variant="secondary" onClick={() => setModalOpen(false)} className="flex-1">Cancel</Button>
