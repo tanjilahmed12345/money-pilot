@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useStore } from "@/store";
 import { Transaction, TransactionType } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { useToast } from "@/components/ui/Toast";
+import { matchCategory, aiCategorize } from "@/lib/auto-categorize";
 
 interface TransactionFormProps {
   editTransaction?: Transaction | null;
@@ -32,7 +33,7 @@ const TYPE_CONFIG: { value: TransactionType; label: string; activeClass: string 
 ];
 
 export function TransactionForm({ editTransaction, onClose }: TransactionFormProps) {
-  const { addTransaction, updateTransaction, addRecurring, categories } = useStore();
+  const { addTransaction, updateTransaction, addRecurring, categories, merchantMap, setMerchantCategory } = useStore();
   const { toast } = useToast();
 
   const [title, setTitle] = useState("");
@@ -45,6 +46,12 @@ export function TransactionForm({ editTransaction, onClose }: TransactionFormPro
   const [frequency, setFrequency] = useState<"daily" | "weekly" | "monthly" | "yearly">("monthly");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const [autoSuggested, setAutoSuggested] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [suggestionSource, setSuggestionSource] = useState<"rule" | "ai" | "merchant" | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const userOverrodeCategory = useRef(false);
+
   useEffect(() => {
     if (editTransaction) {
       setTitle(editTransaction.title);
@@ -54,12 +61,60 @@ export function TransactionForm({ editTransaction, onClose }: TransactionFormPro
       setDate(editTransaction.date);
       setNotes(editTransaction.notes);
       setRecurring(false);
+      userOverrodeCategory.current = true; // Don't auto-suggest for edits
     }
   }, [editTransaction]);
 
+  // Auto-categorize when merchant name changes
+  const handleTitleChange = useCallback((value: string) => {
+    setTitle(value);
+    userOverrodeCategory.current = false;
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    const trimmed = value.trim();
+    if (!trimmed || trimmed.length < 2) {
+      setAutoSuggested(false);
+      setSuggestionSource(null);
+      return;
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      // Step 1: Try local match (merchant map + keywords)
+      const localMatch = matchCategory(trimmed, merchantMap, categories);
+      if (localMatch && !userOverrodeCategory.current) {
+        setCategory(localMatch);
+        setAutoSuggested(true);
+        setSuggestionSource(merchantMap[trimmed.toLowerCase()] ? "merchant" : "rule");
+        return;
+      }
+
+      // Step 2: Try AI categorization (only for 3+ chars)
+      if (!localMatch && trimmed.length >= 3) {
+        setAiLoading(true);
+        const aiResult = await aiCategorize(trimmed, categories);
+        setAiLoading(false);
+
+        if (aiResult && !userOverrodeCategory.current) {
+          setCategory(aiResult);
+          setAutoSuggested(true);
+          setSuggestionSource("ai");
+          // Save AI result to merchant map for future use
+          setMerchantCategory(trimmed, aiResult);
+        }
+      }
+    }, 500);
+  }, [merchantMap, categories, setMerchantCategory]);
+
+  const handleCategoryChange = (value: string) => {
+    setCategory(value);
+    userOverrodeCategory.current = true;
+    setAutoSuggested(false);
+    setSuggestionSource(null);
+  };
+
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-    // Allow empty, digits, and one decimal point with up to 2 decimal places
     if (val === "" || /^\d+\.?\d{0,2}$/.test(val)) {
       setAmount(val);
     }
@@ -89,6 +144,11 @@ export function TransactionForm({ editTransaction, onClose }: TransactionFormPro
       notes: notes.trim(),
     };
 
+    // Save merchant → category mapping if user overrode or confirmed
+    if (title.trim()) {
+      setMerchantCategory(title.trim(), category);
+    }
+
     if (editTransaction) {
       updateTransaction(editTransaction.id, data);
       toast("Transaction updated");
@@ -96,7 +156,6 @@ export function TransactionForm({ editTransaction, onClose }: TransactionFormPro
       addTransaction(data);
       toast("Transaction added");
 
-      // Also create a recurring template if toggled on
       if (recurring) {
         addRecurring({
           title: data.title,
@@ -117,6 +176,8 @@ export function TransactionForm({ editTransaction, onClose }: TransactionFormPro
     ...categories.map((c) => ({ value: c.id, label: `${c.icon} ${c.name}` })),
   ];
 
+  const selectedCat = categories.find((c) => c.id === category);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Amount */}
@@ -124,17 +185,15 @@ export function TransactionForm({ editTransaction, onClose }: TransactionFormPro
         <label htmlFor="amount" className="text-sm font-medium text-[var(--foreground)]">
           Amount
         </label>
-        <div className="relative">
-          <input
-            id="amount"
-            type="text"
-            inputMode="decimal"
-            value={amount}
-            onChange={handleAmountChange}
-            placeholder="0.00"
-            className="w-full rounded-lg border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-lg font-semibold tabular-nums text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 transition-colors"
-          />
-        </div>
+        <input
+          id="amount"
+          type="text"
+          inputMode="decimal"
+          value={amount}
+          onChange={handleAmountChange}
+          placeholder="0.00"
+          className="w-full rounded-lg border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-lg font-semibold tabular-nums text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 transition-colors"
+        />
         {errors.amount && <p className="text-xs text-[var(--destructive)]">{errors.amount}</p>}
       </div>
 
@@ -156,22 +215,45 @@ export function TransactionForm({ editTransaction, onClose }: TransactionFormPro
         ))}
       </div>
 
-      {/* Merchant name */}
-      <Input
-        label="Merchant / Description"
-        id="title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="e.g., Grocery shopping"
-      />
-      {errors.title && <p className="text-xs text-[var(--destructive)] -mt-3">{errors.title}</p>}
+      {/* Merchant name with auto-categorize indicator */}
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="title" className="text-sm font-medium text-[var(--foreground)]">
+          Merchant / Description
+        </label>
+        <div className="relative">
+          <input
+            id="title"
+            value={title}
+            onChange={(e) => handleTitleChange(e.target.value)}
+            placeholder="e.g., Grocery shopping"
+            className="w-full rounded-lg border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 transition-colors pr-8"
+          />
+          {aiLoading && (
+            <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+              <span className="h-4 w-4 block animate-spin rounded-full border-2 border-[var(--primary)] border-t-transparent" />
+            </div>
+          )}
+        </div>
+        {errors.title && <p className="text-xs text-[var(--destructive)]">{errors.title}</p>}
+        {autoSuggested && selectedCat && (
+          <p className="text-xs text-[var(--muted-foreground)] flex items-center gap-1">
+            <span>Auto-categorized as</span>
+            <span className="font-medium" style={{ color: selectedCat.color }}>
+              {selectedCat.icon} {selectedCat.name}
+            </span>
+            <span className="text-[10px] opacity-60">
+              ({suggestionSource === "merchant" ? "saved rule" : suggestionSource === "ai" ? "AI" : "keyword"})
+            </span>
+          </p>
+        )}
+      </div>
 
       {/* Category */}
       <Select
         label="Category"
         id="category"
         value={category}
-        onChange={(e) => setCategory(e.target.value)}
+        onChange={(e) => handleCategoryChange(e.target.value)}
         options={categoryOptions}
       />
       {errors.category && <p className="text-xs text-[var(--destructive)] -mt-3">{errors.category}</p>}
@@ -201,7 +283,7 @@ export function TransactionForm({ editTransaction, onClose }: TransactionFormPro
         />
       </div>
 
-      {/* Recurring toggle — only for new transactions */}
+      {/* Recurring toggle */}
       {!editTransaction && (
         <div className="rounded-lg border border-[var(--border)] px-4 py-3">
           <label className="flex items-center justify-between cursor-pointer">

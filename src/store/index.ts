@@ -71,6 +71,12 @@ interface NetWorthSlice {
   takeSnapshot: (month: string) => void;
 }
 
+interface MerchantMapSlice {
+  merchantMap: Record<string, string>; // lowercase merchant name → category ID
+  setMerchantCategory: (merchant: string, categoryId: string) => void;
+  deleteMerchantMapping: (merchant: string) => void;
+}
+
 interface AiSummarySlice {
   aiSummary: {
     text: string;
@@ -88,7 +94,7 @@ interface SettingsSlice {
   resetSettings: () => void;
 }
 
-type Store = TransactionSlice & CategorySlice & BudgetSlice & RecurringSlice & SavingsSlice & NetWorthSlice & AiSummarySlice & SettingsSlice & {
+type Store = TransactionSlice & CategorySlice & BudgetSlice & RecurringSlice & SavingsSlice & NetWorthSlice & MerchantMapSlice & AiSummarySlice & SettingsSlice & {
   resetAll: () => void;
 };
 
@@ -240,6 +246,19 @@ export const useStore = create<Store>()(
           return { netWorthSnapshots: [...state.netWorthSnapshots, snapshot].sort((a, b) => a.month.localeCompare(b.month)) };
         }),
 
+      // Merchant Map
+      merchantMap: {},
+      setMerchantCategory: (merchant, categoryId) =>
+        set((state) => ({
+          merchantMap: { ...state.merchantMap, [merchant.toLowerCase().trim()]: categoryId },
+        })),
+      deleteMerchantMapping: (merchant) =>
+        set((state) => {
+          const next = { ...state.merchantMap };
+          delete next[merchant.toLowerCase().trim()];
+          return { merchantMap: next };
+        }),
+
       // AI Summary
       aiSummary: null,
       setAiSummary: (summary) => set({ aiSummary: summary }),
@@ -264,6 +283,7 @@ export const useStore = create<Store>()(
           assets: [],
           liabilities: [],
           netWorthSnapshots: [],
+          merchantMap: {},
           aiSummary: null,
           settings: DEFAULT_SETTINGS,
         }),

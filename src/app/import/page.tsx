@@ -22,6 +22,7 @@ export default function ImportPage() {
   }));
   const transactions = useStore((s) => s.transactions);
   const importTransactions = useStore((s) => s.importTransactions);
+  const merchantMap = useStore((s) => s.merchantMap);
   const { toast } = useToast();
 
   const fileRef = useRef<HTMLInputElement>(null);
@@ -45,7 +46,7 @@ export default function ImportPage() {
     setParsing(true);
     setFileName(file.name);
     try {
-      const parsed = await parseCsv(file, categories, transactions);
+      const parsed = await parseCsv(file, categories, transactions, merchantMap);
       if (parsed.length === 0) {
         toast("No valid rows found in CSV", "error");
         setParsing(false);
@@ -58,7 +59,7 @@ export default function ImportPage() {
     }
     setParsing(false);
     if (fileRef.current) fileRef.current.value = "";
-  }, [categories, transactions, toast]);
+  }, [categories, transactions, merchantMap, toast]);
 
   const toggleRow = (id: string) => {
     setRows((prev) => prev.map((r) => r.id === id ? { ...r, selected: !r.selected } : r));

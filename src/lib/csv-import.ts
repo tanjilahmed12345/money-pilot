@@ -1,6 +1,7 @@
 import Papa from "papaparse";
 import { Transaction, TransactionType, Category } from "@/types";
 import { v4 as uuidv4 } from "uuid";
+import { matchCategory } from "./auto-categorize";
 
 export interface CsvRow {
   id: string;
@@ -13,53 +14,8 @@ export interface CsvRow {
   selected: boolean;
 }
 
-// Keyword → category ID mapping for auto-categorization
-const KEYWORD_MAP: Record<string, string> = {
-  // Food
-  grocery: "cat-food", restaurant: "cat-food", food: "cat-food", cafe: "cat-food",
-  coffee: "cat-food", pizza: "cat-food", burger: "cat-food", lunch: "cat-food",
-  dinner: "cat-food", breakfast: "cat-food", bakery: "cat-food", snack: "cat-food",
-  // Transport
-  uber: "cat-transport", lyft: "cat-transport", taxi: "cat-transport", gas: "cat-transport",
-  fuel: "cat-transport", parking: "cat-transport", bus: "cat-transport", metro: "cat-transport",
-  train: "cat-transport", flight: "cat-transport", airline: "cat-transport", toll: "cat-transport",
-  pathao: "cat-transport", ride: "cat-transport",
-  // Shopping
-  amazon: "cat-shopping", shop: "cat-shopping", store: "cat-shopping", mall: "cat-shopping",
-  market: "cat-shopping", clothing: "cat-shopping", fashion: "cat-shopping", purchase: "cat-shopping",
-  daraz: "cat-shopping",
-  // Salary
-  salary: "cat-salary", payroll: "cat-salary", wages: "cat-salary", deposit: "cat-salary",
-  freelance: "cat-salary", payment: "cat-salary",
-  // Entertainment
-  netflix: "cat-entertainment", spotify: "cat-entertainment", youtube: "cat-entertainment",
-  movie: "cat-entertainment", cinema: "cat-entertainment", game: "cat-entertainment",
-  music: "cat-entertainment", subscription: "cat-entertainment", hulu: "cat-entertainment",
-  disney: "cat-entertainment", steam: "cat-entertainment",
-  // Bills
-  electric: "cat-bills", water: "cat-bills", internet: "cat-bills", phone: "cat-bills",
-  utility: "cat-bills", bill: "cat-bills", rent: "cat-bills", insurance: "cat-bills",
-  mortgage: "cat-bills", wifi: "cat-bills", mobile: "cat-bills",
-  // Health
-  pharmacy: "cat-health", hospital: "cat-health", doctor: "cat-health", medical: "cat-health",
-  health: "cat-health", clinic: "cat-health", dentist: "cat-health", medicine: "cat-health",
-  gym: "cat-health", fitness: "cat-health",
-  // Education
-  school: "cat-education", university: "cat-education", course: "cat-education",
-  tuition: "cat-education", book: "cat-education", udemy: "cat-education",
-  education: "cat-education", college: "cat-education", tutorial: "cat-education",
-};
-
-function autoCategorize(description: string, categories: Category[]): string {
-  const lower = description.toLowerCase();
-  const catIds = new Set(categories.map((c) => c.id));
-
-  for (const [keyword, catId] of Object.entries(KEYWORD_MAP)) {
-    if (lower.includes(keyword) && catIds.has(catId)) {
-      return catId;
-    }
-  }
-  return "cat-others";
+function autoCategorize(description: string, categories: Category[], merchantMap: Record<string, string>): string {
+  return matchCategory(description, merchantMap, categories) || "cat-others";
 }
 
 function parseDate(raw: string): string {
@@ -107,7 +63,8 @@ function inferType(amount: number, description: string): TransactionType {
 export function parseCsv(
   file: File,
   categories: Category[],
-  existingTransactions: Transaction[]
+  existingTransactions: Transaction[],
+  merchantMap: Record<string, string> = {}
 ): Promise<CsvRow[]> {
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
@@ -151,7 +108,7 @@ export function parseCsv(
 
           const date = parseDate(dateRaw || "");
           const type = inferType(parseFloat((amountRaw || "0").replace(/[^0-9.\-]/g, "")), description);
-          const categoryId = autoCategorize(description, categories);
+          const categoryId = autoCategorize(description, categories, merchantMap);
           const key = `${date}|${amountNum}|${description.toLowerCase()}`;
 
           rows.push({
