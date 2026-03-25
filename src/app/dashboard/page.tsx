@@ -7,6 +7,7 @@ import { MonthlyComparison } from "@/components/dashboard/MonthlyComparison";
 import { TopSpending } from "@/components/dashboard/TopSpending";
 import { StatsBar } from "@/components/dashboard/StatsBar";
 import { BudgetAlerts } from "@/components/dashboard/BudgetAlerts";
+import { SpendingAnomalyAlerts } from "@/components/dashboard/SpendingAnomalyAlerts";
 import { ChartSkeleton } from "@/components/ui/Skeleton";
 
 const SpendingBreakdown = dynamic(
@@ -22,6 +23,7 @@ export default function DashboardPage() {
         <p className="text-sm text-[var(--muted-foreground)] mt-1">Your financial overview</p>
       </div>
       <BudgetAlerts />
+      <SpendingAnomalyAlerts />
       <StatCards />
       <StatsBar />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
