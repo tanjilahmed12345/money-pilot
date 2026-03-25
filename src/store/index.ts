@@ -12,6 +12,9 @@ import {
   ThemeMode,
   RecurringTransaction,
   SavingsGoal,
+  Asset,
+  Liability,
+  NetWorthSnapshot,
 } from "@/types";
 import { DEFAULT_CATEGORIES, DEFAULT_SETTINGS } from "@/lib/constants";
 
@@ -55,6 +58,19 @@ interface SavingsSlice {
   withdrawFromSavings: (id: string, amount: number) => void;
 }
 
+interface NetWorthSlice {
+  assets: Asset[];
+  liabilities: Liability[];
+  netWorthSnapshots: NetWorthSnapshot[];
+  addAsset: (a: Omit<Asset, "id">) => void;
+  updateAsset: (id: string, a: Partial<Asset>) => void;
+  deleteAsset: (id: string) => void;
+  addLiability: (l: Omit<Liability, "id">) => void;
+  updateLiability: (id: string, l: Partial<Liability>) => void;
+  deleteLiability: (id: string) => void;
+  takeSnapshot: (month: string) => void;
+}
+
 interface SettingsSlice {
   settings: Settings;
   setTheme: (theme: ThemeMode) => void;
@@ -62,7 +78,7 @@ interface SettingsSlice {
   resetSettings: () => void;
 }
 
-type Store = TransactionSlice & CategorySlice & BudgetSlice & RecurringSlice & SavingsSlice & SettingsSlice & {
+type Store = TransactionSlice & CategorySlice & BudgetSlice & RecurringSlice & SavingsSlice & NetWorthSlice & SettingsSlice & {
   resetAll: () => void;
 };
 
@@ -179,6 +195,41 @@ export const useStore = create<Store>()(
           ),
         })),
 
+      // Net Worth
+      assets: [],
+      liabilities: [],
+      netWorthSnapshots: [],
+      addAsset: (a) =>
+        set((state) => ({ assets: [...state.assets, { ...a, id: uuidv4() }] })),
+      updateAsset: (id, updates) =>
+        set((state) => ({ assets: state.assets.map((a) => a.id === id ? { ...a, ...updates } : a) })),
+      deleteAsset: (id) =>
+        set((state) => ({ assets: state.assets.filter((a) => a.id !== id) })),
+      addLiability: (l) =>
+        set((state) => ({ liabilities: [...state.liabilities, { ...l, id: uuidv4() }] })),
+      updateLiability: (id, updates) =>
+        set((state) => ({ liabilities: state.liabilities.map((l) => l.id === id ? { ...l, ...updates } : l) })),
+      deleteLiability: (id) =>
+        set((state) => ({ liabilities: state.liabilities.filter((l) => l.id !== id) })),
+      takeSnapshot: (month) =>
+        set((state) => {
+          const totalAssets = state.assets.reduce((s, a) => s + a.amount, 0);
+          const totalLiabilities = state.liabilities.reduce((s, l) => s + l.amount, 0);
+          const snapshot: NetWorthSnapshot = {
+            month,
+            assets: totalAssets,
+            liabilities: totalLiabilities,
+            netWorth: totalAssets - totalLiabilities,
+          };
+          const existing = state.netWorthSnapshots.findIndex((s) => s.month === month);
+          if (existing >= 0) {
+            const updated = [...state.netWorthSnapshots];
+            updated[existing] = snapshot;
+            return { netWorthSnapshots: updated };
+          }
+          return { netWorthSnapshots: [...state.netWorthSnapshots, snapshot].sort((a, b) => a.month.localeCompare(b.month)) };
+        }),
+
       // Settings
       settings: DEFAULT_SETTINGS,
       setTheme: (theme) =>
@@ -195,6 +246,9 @@ export const useStore = create<Store>()(
           budgets: [],
           recurringTransactions: [],
           savingsGoals: [],
+          assets: [],
+          liabilities: [],
+          netWorthSnapshots: [],
           settings: DEFAULT_SETTINGS,
         }),
     }),

@@ -59,6 +59,32 @@ export interface SavingsGoal {
   category?: string; // linked savings category id
 }
 
+export type AssetType = "bank" | "investment" | "property" | "cash" | "other";
+export type LiabilityType = "loan" | "credit_card" | "mortgage" | "other";
+
+export interface Asset {
+  id: string;
+  name: string;
+  amount: number;
+  type: AssetType;
+  icon: string;
+}
+
+export interface Liability {
+  id: string;
+  name: string;
+  amount: number;
+  type: LiabilityType;
+  icon: string;
+}
+
+export interface NetWorthSnapshot {
+  month: string; // YYYY-MM
+  assets: number;
+  liabilities: number;
+  netWorth: number;
+}
+
 export interface FilterState {
   search: string;
   type: TransactionType | "all";

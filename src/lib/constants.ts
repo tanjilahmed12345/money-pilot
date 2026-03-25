@@ -30,6 +30,7 @@ export const NAV_ITEMS = [
   { href: "/budget", label: "Budget", icon: "Wallet" },
   { href: "/recurring", label: "Recurring", icon: "Repeat" },
   { href: "/goals", label: "Goals", icon: "Target" },
+  { href: "/net-worth", label: "Net Worth", icon: "TrendingUp" },
   { href: "/calendar", label: "Calendar", icon: "CalendarDays" },
   { href: "/import", label: "Import CSV", icon: "Upload" },
   { href: "/settings", label: "Settings", icon: "Settings" },
