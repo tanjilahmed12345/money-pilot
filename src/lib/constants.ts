@@ -31,5 +31,6 @@ export const NAV_ITEMS = [
   { href: "/recurring", label: "Recurring", icon: "Repeat" },
   { href: "/goals", label: "Goals", icon: "Target" },
   { href: "/calendar", label: "Calendar", icon: "CalendarDays" },
+  { href: "/import", label: "Import CSV", icon: "Upload" },
   { href: "/settings", label: "Settings", icon: "Settings" },
 ] as const;
