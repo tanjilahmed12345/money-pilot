@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useStore } from "@/store";
 import { Transaction, FilterState } from "@/types";
 import { useFilteredTransactions } from "@/hooks/useFilteredTransactions";
@@ -14,17 +15,67 @@ const defaultFilters: FilterState = {
   search: "",
   type: "all",
   category: "",
+  categories: [],
   dateFrom: "",
   dateTo: "",
+  amountMin: "",
+  amountMax: "",
   sortBy: "date",
   sortOrder: "desc",
 };
 
+function filtersFromParams(params: URLSearchParams): FilterState {
+  const cats = params.get("categories");
+  return {
+    search: params.get("search") || "",
+    type: (params.get("type") as FilterState["type"]) || "all",
+    category: params.get("category") || "",
+    categories: cats ? cats.split(",").filter(Boolean) : [],
+    dateFrom: params.get("dateFrom") || "",
+    dateTo: params.get("dateTo") || "",
+    amountMin: params.get("amountMin") || "",
+    amountMax: params.get("amountMax") || "",
+    sortBy: (params.get("sortBy") as "date" | "amount") || "date",
+    sortOrder: (params.get("sortOrder") as "asc" | "desc") || "desc",
+  };
+}
+
+function filtersToParams(filters: FilterState): string {
+  const params = new URLSearchParams();
+  if (filters.search) params.set("search", filters.search);
+  if (filters.type !== "all") params.set("type", filters.type);
+  if (filters.category) params.set("category", filters.category);
+  if (filters.categories.length > 0) params.set("categories", filters.categories.join(","));
+  if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
+  if (filters.dateTo) params.set("dateTo", filters.dateTo);
+  if (filters.amountMin) params.set("amountMin", filters.amountMin);
+  if (filters.amountMax) params.set("amountMax", filters.amountMax);
+  if (filters.sortBy !== "date") params.set("sortBy", filters.sortBy);
+  if (filters.sortOrder !== "desc") params.set("sortOrder", filters.sortOrder);
+  return params.toString();
+}
+
 export default function TransactionsPage() {
   const transactions = useStore((s) => s.transactions);
-  const [filters, setFilters] = useState<FilterState>(defaultFilters);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const [filters, setFilters] = useState<FilterState>(() => filtersFromParams(searchParams));
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editTx, setEditTx] = useState<Transaction | null>(null);
+
+  // Sync URL → state on param changes (e.g. shared link)
+  useEffect(() => {
+    setFilters(filtersFromParams(searchParams));
+  }, [searchParams]);
+
+  // Sync state → URL
+  const updateFilters = useCallback((next: FilterState) => {
+    setFilters(next);
+    const qs = filtersToParams(next);
+    const url = qs ? `/transactions?${qs}` : "/transactions";
+    router.replace(url, { scroll: false });
+  }, [router]);
 
   const filtered = useFilteredTransactions(transactions, filters);
 
@@ -60,7 +111,7 @@ export default function TransactionsPage() {
         </Button>
       </div>
 
-      <TransactionFilters filters={filters} onChange={setFilters} />
+      <TransactionFilters filters={filters} onChange={updateFilters} defaultFilters={defaultFilters} />
       <TransactionList transactions={filtered} onEdit={openEdit} />
 
       <Drawer

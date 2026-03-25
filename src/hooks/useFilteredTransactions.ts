@@ -19,7 +19,11 @@ export function useFilteredTransactions(
       result = result.filter((t) => t.type === filters.type);
     }
 
-    if (filters.category) {
+    // Multi-category filter (takes precedence over single category)
+    if (filters.categories.length > 0) {
+      const catSet = new Set(filters.categories);
+      result = result.filter((t) => catSet.has(t.category));
+    } else if (filters.category) {
       result = result.filter((t) => t.category === filters.category);
     }
 
@@ -29,6 +33,16 @@ export function useFilteredTransactions(
 
     if (filters.dateTo) {
       result = result.filter((t) => t.date <= filters.dateTo);
+    }
+
+    if (filters.amountMin) {
+      const min = Number(filters.amountMin);
+      if (!isNaN(min)) result = result.filter((t) => t.amount >= min);
+    }
+
+    if (filters.amountMax) {
+      const max = Number(filters.amountMax);
+      if (!isNaN(max)) result = result.filter((t) => t.amount <= max);
     }
 
     result.sort((a, b) => {

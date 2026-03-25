@@ -56,8 +56,11 @@ export interface FilterState {
   search: string;
   type: TransactionType | "all";
   category: string;
+  categories: string[];
   dateFrom: string;
   dateTo: string;
+  amountMin: string;
+  amountMax: string;
   sortBy: "date" | "amount";
   sortOrder: "asc" | "desc";
 }
