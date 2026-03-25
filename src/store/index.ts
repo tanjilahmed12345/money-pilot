@@ -71,6 +71,16 @@ interface NetWorthSlice {
   takeSnapshot: (month: string) => void;
 }
 
+interface AiSummarySlice {
+  aiSummary: {
+    text: string;
+    generatedAt: string; // ISO date
+    transactionCount: number; // tx count at generation time
+  } | null;
+  setAiSummary: (summary: { text: string; generatedAt: string; transactionCount: number }) => void;
+  clearAiSummary: () => void;
+}
+
 interface SettingsSlice {
   settings: Settings;
   setTheme: (theme: ThemeMode) => void;
@@ -78,7 +88,7 @@ interface SettingsSlice {
   resetSettings: () => void;
 }
 
-type Store = TransactionSlice & CategorySlice & BudgetSlice & RecurringSlice & SavingsSlice & NetWorthSlice & SettingsSlice & {
+type Store = TransactionSlice & CategorySlice & BudgetSlice & RecurringSlice & SavingsSlice & NetWorthSlice & AiSummarySlice & SettingsSlice & {
   resetAll: () => void;
 };
 
@@ -230,6 +240,11 @@ export const useStore = create<Store>()(
           return { netWorthSnapshots: [...state.netWorthSnapshots, snapshot].sort((a, b) => a.month.localeCompare(b.month)) };
         }),
 
+      // AI Summary
+      aiSummary: null,
+      setAiSummary: (summary) => set({ aiSummary: summary }),
+      clearAiSummary: () => set({ aiSummary: null }),
+
       // Settings
       settings: DEFAULT_SETTINGS,
       setTheme: (theme) =>
@@ -249,6 +264,7 @@ export const useStore = create<Store>()(
           assets: [],
           liabilities: [],
           netWorthSnapshots: [],
+          aiSummary: null,
           settings: DEFAULT_SETTINGS,
         }),
     }),

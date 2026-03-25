@@ -8,6 +8,7 @@ import { TopSpending } from "@/components/dashboard/TopSpending";
 import { StatsBar } from "@/components/dashboard/StatsBar";
 import { BudgetAlerts } from "@/components/dashboard/BudgetAlerts";
 import { SpendingAnomalyAlerts } from "@/components/dashboard/SpendingAnomalyAlerts";
+import { AiSpendingSummary } from "@/components/dashboard/AiSpendingSummary";
 import { ChartSkeleton } from "@/components/ui/Skeleton";
 
 const SpendingBreakdown = dynamic(
@@ -33,6 +34,7 @@ export default function DashboardPage() {
           <TopSpending />
         </div>
       </div>
+      <AiSpendingSummary />
       <SpendingBreakdown />
     </div>
   );
