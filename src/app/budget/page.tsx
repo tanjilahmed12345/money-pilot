@@ -9,9 +9,11 @@ import { Select } from "@/components/ui/Select";
 import { Modal } from "@/components/ui/Modal";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatCurrency, getCurrentMonth, getMonthName, getThisMonthTransactions } from "@/utils";
+import { useToast } from "@/components/ui/Toast";
 
 export default function BudgetPage() {
   const { budgets, setBudget, deleteBudget, categories, transactions, settings } = useStore();
+  const { toast } = useToast();
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("overall");
   const [amount, setAmount] = useState("");
@@ -40,6 +42,7 @@ export default function BudgetPage() {
     setBudget(selectedCategory, Number(amount), month);
     setModalOpen(false);
     setAmount("");
+    toast("Budget saved");
   };
 
   const getStatusColor = (spent: number, budget: number) => {
@@ -70,7 +73,7 @@ export default function BudgetPage() {
       </div>
 
       {monthBudgets.length === 0 ? (
-        <EmptyState icon="💰" title="No budgets set" description="Set a monthly budget to track your spending" />
+        <EmptyState icon="💰" title="No budgets set" description="Set a monthly budget to track your spending" action={{ label: "Set Budget", onClick: () => setModalOpen(true) }} />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {monthBudgets.map((b) => {
@@ -83,13 +86,18 @@ export default function BudgetPage() {
             return (
               <Card key={b.id}>
                 <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">{isOverall ? "💳" : cat?.icon || "📦"}</span>
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-lg"
+                      style={{ backgroundColor: `${cat?.color || "#6b7280"}15` }}
+                    >
+                      {isOverall ? "💳" : cat?.icon || "📦"}
+                    </div>
                     <h3 className="font-medium text-[var(--card-foreground)]">
                       {isOverall ? "Overall Budget" : cat?.name || b.category}
                     </h3>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => deleteBudget(b.id)}>
+                  <Button variant="ghost" size="sm" onClick={() => { deleteBudget(b.id); toast("Budget deleted"); }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--destructive)" strokeWidth="2">
                       <path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
                       <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />

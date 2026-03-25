@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatCurrency, formatDate } from "@/utils";
+import { useToast } from "@/components/ui/Toast";
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -21,6 +22,7 @@ export function TransactionList({ transactions, onEdit }: TransactionListProps) 
   }));
   const deleteTransaction = useStore((s) => s.deleteTransaction);
   const addTransaction = useStore((s) => s.addTransaction);
+  const { toast } = useToast();
 
   const catMap = useMemo(
     () => Object.fromEntries(categories.map((c) => [c.id, c])),
@@ -36,7 +38,8 @@ export function TransactionList({ transactions, onEdit }: TransactionListProps) 
       date: new Date().toISOString().split("T")[0],
       notes: t.notes,
     });
-  }, [addTransaction]);
+    toast("Transaction duplicated");
+  }, [addTransaction, toast]);
 
   if (transactions.length === 0) {
     return <EmptyState title="No transactions found" description="Try adjusting your filters or add a new transaction" />;
@@ -90,7 +93,7 @@ export function TransactionList({ transactions, onEdit }: TransactionListProps) 
                     <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
                   </svg>
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => deleteTransaction(t.id)} title="Delete">
+                <Button variant="ghost" size="sm" onClick={() => { deleteTransaction(t.id); toast("Transaction deleted"); }} title="Delete">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--destructive)" strokeWidth="2">
                     <path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
                     <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />

@@ -6,6 +6,7 @@ import { Transaction } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
+import { useToast } from "@/components/ui/Toast";
 
 interface TransactionFormProps {
   editTransaction?: Transaction | null;
@@ -14,6 +15,7 @@ interface TransactionFormProps {
 
 export function TransactionForm({ editTransaction, onClose }: TransactionFormProps) {
   const { addTransaction, updateTransaction, categories } = useStore();
+  const { toast } = useToast();
 
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
@@ -59,8 +61,10 @@ export function TransactionForm({ editTransaction, onClose }: TransactionFormPro
 
     if (editTransaction) {
       updateTransaction(editTransaction.id, data);
+      toast("Transaction updated");
     } else {
       addTransaction(data);
+      toast("Transaction added");
     }
     onClose();
   };

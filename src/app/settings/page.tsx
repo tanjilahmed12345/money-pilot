@@ -10,6 +10,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Currency, ThemeMode, Category } from "@/types";
 import { CURRENCY_OPTIONS } from "@/lib/constants";
 import { transactionsToCSV, downloadFile } from "@/utils";
+import { useToast } from "@/components/ui/Toast";
 
 export default function SettingsPage() {
   const {
@@ -18,6 +19,7 @@ export default function SettingsPage() {
     categories, addCategory, updateCategory, deleteCategory, resetCategories,
   } = useStore();
 
+  const { toast } = useToast();
   const [confirmReset, setConfirmReset] = useState(false);
   const [catModal, setCatModal] = useState(false);
   const [editCat, setEditCat] = useState<Category | null>(null);
@@ -29,10 +31,12 @@ export default function SettingsPage() {
   const handleExportJSON = () => {
     const data = { transactions, categories, budgets, settings };
     downloadFile(JSON.stringify(data, null, 2), "money-pilot-data.json", "application/json");
+    toast("Data exported as JSON");
   };
 
   const handleExportCSV = () => {
     downloadFile(transactionsToCSV(transactions), "transactions.csv", "text/csv");
+    toast("Transactions exported as CSV");
   };
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,9 +48,10 @@ export default function SettingsPage() {
         const data = JSON.parse(ev.target?.result as string);
         if (data.transactions && Array.isArray(data.transactions)) {
           importTransactions(data.transactions);
+          toast("Data imported successfully");
         }
       } catch {
-        alert("Invalid JSON file");
+        toast("Invalid JSON file", "error");
       }
     };
     reader.readAsText(file);
@@ -73,8 +78,10 @@ export default function SettingsPage() {
     if (!catName.trim() || !catIcon.trim()) return;
     if (editCat) {
       updateCategory(editCat.id, { name: catName.trim(), color: catColor, icon: catIcon.trim() });
+      toast("Category updated");
     } else {
       addCategory({ name: catName.trim(), color: catColor, icon: catIcon.trim() });
+      toast("Category added");
     }
     setCatModal(false);
   };
@@ -243,6 +250,7 @@ export default function SettingsPage() {
             onClick={() => {
               resetAll();
               setConfirmReset(false);
+              toast("All data has been reset");
             }}
             className="flex-1"
           >

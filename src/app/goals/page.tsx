@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatCurrency, formatDate } from "@/utils";
+import { useToast } from "@/components/ui/Toast";
 
 export default function GoalsPage() {
   const {
@@ -16,6 +17,7 @@ export default function GoalsPage() {
     addToSavings, withdrawFromSavings, settings,
   } = useStore();
   const currency = settings.currency;
+  const { toast } = useToast();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [fundModal, setFundModal] = useState<SavingsGoal | null>(null);
@@ -75,8 +77,10 @@ export default function GoalsPage() {
     };
     if (editItem) {
       updateSavingsGoal(editItem.id, data);
+      toast("Goal updated");
     } else {
       addSavingsGoal(data);
+      toast("Goal created");
     }
     setModalOpen(false);
   };
@@ -91,8 +95,10 @@ export default function GoalsPage() {
     if (!fundModal || !fundAmount || Number(fundAmount) <= 0) return;
     if (fundAction === "add") {
       addToSavings(fundModal.id, Number(fundAmount));
+      toast("Funds added");
     } else {
       withdrawFromSavings(fundModal.id, Number(fundAmount));
+      toast("Funds withdrawn");
     }
     setFundModal(null);
   };
@@ -137,6 +143,7 @@ export default function GoalsPage() {
           icon="🎯"
           title="No savings goals yet"
           description="Set a financial target — vacation, emergency fund, new gadget — and track your progress"
+          action={{ label: "Create Goal", onClick: openAdd }}
         />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -171,7 +178,7 @@ export default function GoalsPage() {
                         <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
                       </svg>
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => deleteSavingsGoal(g.id)}>
+                    <Button variant="ghost" size="sm" onClick={() => { deleteSavingsGoal(g.id); toast("Goal deleted"); }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--destructive)" strokeWidth="2">
                         <path d="M18 6L6 18M6 6l12 12" />
                       </svg>

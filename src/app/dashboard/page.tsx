@@ -6,10 +6,11 @@ import { RecentTransactions } from "@/components/dashboard/RecentTransactions";
 import { MonthlyComparison } from "@/components/dashboard/MonthlyComparison";
 import { TopSpending } from "@/components/dashboard/TopSpending";
 import { StatsBar } from "@/components/dashboard/StatsBar";
+import { ChartSkeleton } from "@/components/ui/Skeleton";
 
 const QuickExpenseChart = dynamic(
   () => import("@/components/dashboard/QuickExpenseChart").then((m) => m.QuickExpenseChart),
-  { ssr: false, loading: () => <div className="h-[350px] rounded-xl border border-[var(--border)] bg-[var(--card)] animate-pulse" /> }
+  { ssr: false, loading: () => <ChartSkeleton /> }
 );
 
 export default function DashboardPage() {

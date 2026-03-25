@@ -11,6 +11,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatCurrency } from "@/utils";
+import { useToast } from "@/components/ui/Toast";
 
 const FREQUENCY_LABELS: Record<string, string> = {
   daily: "Daily",
@@ -32,6 +33,7 @@ export default function RecurringPage() {
     categories, addTransaction, settings,
   } = useStore();
   const currency = settings.currency;
+  const { toast } = useToast();
   const catMap = Object.fromEntries(categories.map((c) => [c.id, c]));
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -89,8 +91,10 @@ export default function RecurringPage() {
     };
     if (editItem) {
       updateRecurring(editItem.id, data);
+      toast("Template updated");
     } else {
       addRecurring(data);
+      toast("Template created");
     }
     setModalOpen(false);
   };
@@ -104,6 +108,7 @@ export default function RecurringPage() {
       date: new Date().toISOString().split("T")[0],
       notes: r.notes ? `${r.notes} (recurring)` : "Recurring transaction",
     });
+    toast("Transaction applied");
   };
 
   const categoryOptions = [
@@ -133,6 +138,7 @@ export default function RecurringPage() {
           icon="🔄"
           title="No recurring transactions"
           description="Create templates for bills, salary, subscriptions, and other repeating transactions"
+          action={{ label: "Add Template", onClick: openAdd }}
         />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -188,7 +194,7 @@ export default function RecurringPage() {
                       <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
                     </svg>
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => deleteRecurring(r.id)}>
+                  <Button variant="ghost" size="sm" onClick={() => { deleteRecurring(r.id); toast("Template deleted"); }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--destructive)" strokeWidth="2">
                       <path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
                       <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />

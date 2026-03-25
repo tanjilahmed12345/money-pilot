@@ -35,10 +35,17 @@ export default function CalendarPage() {
     });
 
   const expByDay: Record<number, number> = {};
+  const dominantColorByDay: Record<number, string> = {};
   Object.entries(txByDay).forEach(([day, txs]) => {
-    expByDay[Number(day)] = txs
-      .filter((t) => t.type === "expense")
-      .reduce((sum, t) => sum + t.amount, 0);
+    const expenses = txs.filter((t) => t.type === "expense");
+    expByDay[Number(day)] = expenses.reduce((sum, t) => sum + t.amount, 0);
+    // Find the category with the highest spend for this day
+    const catTotals: Record<string, number> = {};
+    expenses.forEach((t) => { catTotals[t.category] = (catTotals[t.category] || 0) + t.amount; });
+    const topCat = Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0];
+    if (topCat) {
+      dominantColorByDay[Number(day)] = catMap[topCat[0]]?.color || "#6b7280";
+    }
   });
 
   const prev = () => {
@@ -116,7 +123,10 @@ export default function CalendarPage() {
                   </span>
                 )}
                 {hasTx && (
-                  <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-[var(--primary)]" />
+                  <span
+                    className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full"
+                    style={{ backgroundColor: dominantColorByDay[day] || "var(--primary)" }}
+                  />
                 )}
               </button>
             );
@@ -138,7 +148,12 @@ export default function CalendarPage() {
                 className="flex items-center justify-between rounded-lg border border-[var(--border)] px-3 py-2"
               >
                 <div className="flex items-center gap-2">
-                  <span>{cat?.icon || "📦"}</span>
+                  <div
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm"
+                    style={{ backgroundColor: `${cat?.color || "#6b7280"}15` }}
+                  >
+                    {cat?.icon || "📦"}
+                  </div>
                   <div>
                     <p className="text-sm font-medium text-[var(--card-foreground)]">{t.title}</p>
                     {cat && <Badge color={cat.color}>{cat.name}</Badge>}
