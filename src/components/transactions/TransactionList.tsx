@@ -86,7 +86,7 @@ export function TransactionList({ transactions, onEdit }: TransactionListProps) 
             <div
               key={t.id}
               onClick={() => onEdit(t)}
-              className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-3 transition-colors hover:bg-[var(--accent)]/50 cursor-pointer"
+              className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 sm:px-4 py-3 transition-colors hover:bg-[var(--accent)]/50 cursor-pointer"
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <div
@@ -108,15 +108,15 @@ export function TransactionList({ transactions, onEdit }: TransactionListProps) 
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 shrink-0 ml-3">
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2 sm:ml-3">
                 <span
                   className="text-sm font-semibold whitespace-nowrap tabular-nums"
                   style={{ color: amountColor }}
                 >
                   {amountPrefix}{formatCurrency(t.amount, currency)}
                 </span>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="sm" onClick={(e) => duplicateTransaction(e, t)} title="Duplicate">
+                <div className="flex gap-0.5 sm:gap-1">
+                  <Button variant="ghost" size="sm" onClick={(e) => duplicateTransaction(e, t)} title="Duplicate" className="hidden sm:flex">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                     </svg>

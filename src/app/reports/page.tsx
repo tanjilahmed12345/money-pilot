@@ -168,29 +168,29 @@ export default function ReportsPage() {
         ) : (
           <div className="px-8 py-6 space-y-8">
             {/* Key metrics */}
-            <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase">Total Income</p>
-                <p className="mt-1 text-2xl font-bold text-green-600 tabular-nums">
+                <p className="mt-1 text-lg sm:text-2xl font-bold text-green-600 tabular-nums truncate">
                   {formatCurrency(report.income, currency)}
                 </p>
               </div>
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase">Total Expenses</p>
-                <p className="mt-1 text-2xl font-bold text-red-600 tabular-nums">
+                <p className="mt-1 text-lg sm:text-2xl font-bold text-red-600 tabular-nums truncate">
                   {formatCurrency(report.expense, currency)}
                 </p>
               </div>
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase">Savings</p>
-                <p className={`mt-1 text-2xl font-bold tabular-nums ${report.savings >= 0 ? "text-green-600" : "text-red-600"}`}>
+                <p className={`mt-1 text-lg sm:text-2xl font-bold tabular-nums truncate ${report.savings >= 0 ? "text-green-600" : "text-red-600"}`}>
                   {formatCurrency(Math.abs(report.savings), currency)}
                   {report.savings < 0 && " (deficit)"}
                 </p>
               </div>
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase">Savings Rate</p>
-                <p className={`mt-1 text-2xl font-bold ${report.savingsRate >= 0 ? "text-green-600" : "text-red-600"}`}>
+                <p className={`mt-1 text-lg sm:text-2xl font-bold ${report.savingsRate >= 0 ? "text-green-600" : "text-red-600"}`}>
                   {report.savingsRate.toFixed(1)}%
                 </p>
               </div>

@@ -188,9 +188,9 @@ export default function RecurringPage() {
 
       {/* Summary */}
       {enriched.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-3 gap-3 sm:gap-4">
           <Card>
-            <p className="text-sm text-[var(--muted-foreground)]">Active</p>
+            <p className="text-[10px] sm:text-sm text-[var(--muted-foreground)]">Active</p>
             <p className="mt-1 text-xl font-bold text-[var(--foreground)]">{activeCount}</p>
           </Card>
           <Card>
@@ -227,7 +227,7 @@ export default function RecurringPage() {
             return (
               <div
                 key={r.id}
-                className={`flex items-center gap-4 rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-3 transition-colors ${
+                className={`flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-4 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 sm:px-4 py-3 transition-colors ${
                   r.paused ? "opacity-50" : ""
                 }`}
               >

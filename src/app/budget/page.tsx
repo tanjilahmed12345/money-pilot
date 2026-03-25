@@ -123,29 +123,29 @@ export default function BudgetPage() {
 
       {/* Summary cards */}
       {monthBudgets.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-3 gap-3 sm:gap-4">
           <Card>
-            <p className="text-sm text-[var(--muted-foreground)]">Total Budget</p>
-            <p className="mt-1 text-xl font-bold text-[var(--foreground)] tabular-nums">
+            <p className="text-[10px] sm:text-sm text-[var(--muted-foreground)]">Total Budget</p>
+            <p className="mt-1 text-base sm:text-xl font-bold text-[var(--foreground)] tabular-nums truncate">
               {formatCurrency(totalBudget, currency)}
             </p>
           </Card>
           <Card>
-            <p className="text-sm text-[var(--muted-foreground)]">Total Spent</p>
-            <p className="mt-1 text-xl font-bold tabular-nums" style={{ color: totalSpent > totalBudget ? "var(--destructive)" : "var(--foreground)" }}>
+            <p className="text-[10px] sm:text-sm text-[var(--muted-foreground)]">Total Spent</p>
+            <p className="mt-1 text-base sm:text-xl font-bold tabular-nums truncate" style={{ color: totalSpent > totalBudget ? "var(--destructive)" : "var(--foreground)" }}>
               {formatCurrency(totalSpent, currency)}
             </p>
           </Card>
           <Card>
-            <p className="text-sm text-[var(--muted-foreground)]">Status</p>
-            <div className="mt-1 flex items-center gap-2">
+            <p className="text-[10px] sm:text-sm text-[var(--muted-foreground)]">Status</p>
+            <div className="mt-1 flex items-center gap-1 sm:gap-2">
               {exceededCount > 0 ? (
                 <>
-                  <span className="text-xl font-bold text-[var(--destructive)]">{exceededCount}</span>
-                  <span className="text-sm text-[var(--destructive)]">budget{exceededCount !== 1 ? "s" : ""} exceeded</span>
+                  <span className="text-base sm:text-xl font-bold text-[var(--destructive)]">{exceededCount}</span>
+                  <span className="text-xs sm:text-sm text-[var(--destructive)]">exceeded</span>
                 </>
               ) : (
-                <span className="text-xl font-bold text-[var(--success)]">All on track</span>
+                <span className="text-sm sm:text-xl font-bold text-[var(--success)]">All on track</span>
               )}
             </div>
           </Card>

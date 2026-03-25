@@ -25,14 +25,14 @@ export function StatsBar() {
   }, [transactions, currency]);
 
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
       {items.map((item) => (
-        <Card key={item.label} className="p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-lg">{item.icon}</span>
-            <span className="text-xs text-[var(--muted-foreground)]">{item.label}</span>
+        <Card key={item.label} className="p-3 sm:p-4">
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="text-base sm:text-lg">{item.icon}</span>
+            <span className="text-[10px] sm:text-xs text-[var(--muted-foreground)] truncate">{item.label}</span>
           </div>
-          <p className="text-base font-bold text-[var(--card-foreground)]">{item.value}</p>
+          <p className="text-sm sm:text-base font-bold text-[var(--card-foreground)] truncate">{item.value}</p>
           {"sub" in item && item.sub && (
             <p className="text-xs text-[var(--muted-foreground)] truncate mt-0.5">{item.sub}</p>
           )}

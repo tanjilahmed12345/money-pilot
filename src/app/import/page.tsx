@@ -146,8 +146,8 @@ export default function ImportPage() {
         <>
           {/* Summary bar */}
           <Card>
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                 <div>
                   <p className="text-sm text-[var(--muted-foreground)]">File</p>
                   <p className="text-sm font-medium text-[var(--foreground)]">{fileName}</p>

@@ -85,9 +85,9 @@ export default function CalendarPage() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
           {WEEKDAYS.map((d) => (
-            <div key={d} className="py-2 text-center text-xs font-medium text-[var(--muted-foreground)]">
+            <div key={d} className="py-1 sm:py-2 text-center text-[10px] sm:text-xs font-medium text-[var(--muted-foreground)]">
               {d}
             </div>
           ))}
@@ -110,7 +110,7 @@ export default function CalendarPage() {
               <button
                 key={day}
                 onClick={() => hasTx && setSelectedDate(dateStr)}
-                className={`relative flex flex-col items-center rounded-lg p-2 text-sm transition-colors ${
+                className={`relative flex flex-col items-center rounded-lg p-1 sm:p-2 text-xs sm:text-sm transition-colors ${
                   isToday
                     ? "bg-[var(--primary)]/10 font-bold text-[var(--primary)]"
                     : "hover:bg-[var(--accent)]"

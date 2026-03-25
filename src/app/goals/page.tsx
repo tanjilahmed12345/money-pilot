@@ -178,7 +178,7 @@ export default function GoalsPage() {
 
       {/* Summary Cards */}
       {savingsGoals.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <Card>
             <p className="text-sm text-[var(--muted-foreground)]">Total Saved</p>
             <p className="mt-1 text-xl font-bold text-[var(--success)] tabular-nums">{formatCurrency(totalSaved, currency)}</p>
@@ -224,12 +224,12 @@ export default function GoalsPage() {
 
             return (
               <Card key={g.id} className={isComplete ? "border-[var(--success)]/40" : ""}>
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-3 sm:gap-4">
                   {/* Progress Ring */}
                   <ProgressRing
                     percent={pct}
-                    size={80}
-                    strokeWidth={7}
+                    size={64}
+                    strokeWidth={6}
                     color={isComplete ? "var(--success)" : g.color}
                   >
                     <span className="text-sm font-bold text-[var(--card-foreground)]">

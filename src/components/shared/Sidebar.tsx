@@ -102,26 +102,28 @@ export function Sidebar() {
         </nav>
       </aside>
 
-      {/* Mobile Bottom Nav */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around border-t border-[var(--border)] bg-[var(--card)] px-2 py-2">
-        {NAV_ITEMS.map((item) => {
-          const active = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex flex-col items-center gap-0.5 rounded-lg px-3 py-1.5 text-xs transition-colors",
-                active
-                  ? "text-[var(--primary)]"
-                  : "text-[var(--muted-foreground)]"
-              )}
-            >
-              {icons[item.icon]}
-              <span className="mt-0.5">{item.label}</span>
-            </Link>
-          );
-        })}
+      {/* Mobile Bottom Nav — horizontally scrollable */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 border-t border-[var(--border)] bg-[var(--card)]">
+        <div className="flex overflow-x-auto scrollbar-hide px-2 py-1.5 gap-1">
+          {NAV_ITEMS.map((item) => {
+            const active = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex flex-col items-center shrink-0 rounded-lg px-3 py-1.5 min-w-[56px] text-[10px] transition-colors",
+                  active
+                    ? "text-[var(--primary)] bg-[var(--primary)]/10"
+                    : "text-[var(--muted-foreground)]"
+                )}
+              >
+                {icons[item.icon]}
+                <span className="mt-0.5 truncate max-w-[56px]">{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
       </nav>
     </>
   );

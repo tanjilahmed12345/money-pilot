@@ -81,8 +81,8 @@ export function SpendingBreakdown() {
 
   return (
     <Card>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-[var(--card-foreground)]">Spending Breakdown</h2>
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <h2 className="text-base sm:text-lg font-semibold text-[var(--card-foreground)]">Spending Breakdown</h2>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={prev}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

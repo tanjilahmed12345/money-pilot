@@ -142,7 +142,7 @@ export default function NetWorthPage() {
 
       {/* Summary */}
       {hasData && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
           <Card>
             <CardTitle>Total Assets</CardTitle>
             <CardValue className="mt-2">
@@ -197,7 +197,7 @@ export default function NetWorthPage() {
         ) : (
           <div className="space-y-2">
             {assets.map((a) => (
-              <div key={a.id} className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-3">
+              <div key={a.id} className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 sm:px-4 py-3">
                 <div className="flex items-center gap-3">
                   <span className="text-xl">{a.icon}</span>
                   <div>
@@ -239,7 +239,7 @@ export default function NetWorthPage() {
         ) : (
           <div className="space-y-2">
             {liabilities.map((l) => (
-              <div key={l.id} className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-3">
+              <div key={l.id} className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 sm:px-4 py-3">
                 <div className="flex items-center gap-3">
                   <span className="text-xl">{l.icon}</span>
                   <div>
