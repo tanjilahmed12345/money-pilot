@@ -7,7 +7,7 @@ import { useFilteredTransactions } from "@/hooks/useFilteredTransactions";
 import { TransactionForm } from "@/components/transactions/TransactionForm";
 import { TransactionList } from "@/components/transactions/TransactionList";
 import { TransactionFilters } from "@/components/transactions/TransactionFilters";
-import { Modal } from "@/components/ui/Modal";
+import { Drawer } from "@/components/ui/Drawer";
 import { Button } from "@/components/ui/Button";
 
 const defaultFilters: FilterState = {
@@ -23,23 +23,23 @@ const defaultFilters: FilterState = {
 export default function TransactionsPage() {
   const transactions = useStore((s) => s.transactions);
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [editTx, setEditTx] = useState<Transaction | null>(null);
 
   const filtered = useFilteredTransactions(transactions, filters);
 
   const openAdd = () => {
     setEditTx(null);
-    setModalOpen(true);
+    setDrawerOpen(true);
   };
 
   const openEdit = (t: Transaction) => {
     setEditTx(t);
-    setModalOpen(true);
+    setDrawerOpen(true);
   };
 
-  const closeModal = () => {
-    setModalOpen(false);
+  const closeDrawer = () => {
+    setDrawerOpen(false);
     setEditTx(null);
   };
 
@@ -63,13 +63,13 @@ export default function TransactionsPage() {
       <TransactionFilters filters={filters} onChange={setFilters} />
       <TransactionList transactions={filtered} onEdit={openEdit} />
 
-      <Modal
-        open={modalOpen}
-        onClose={closeModal}
+      <Drawer
+        open={drawerOpen}
+        onClose={closeDrawer}
         title={editTx ? "Edit Transaction" : "Add Transaction"}
       >
-        <TransactionForm editTransaction={editTx} onClose={closeModal} />
-      </Modal>
+        <TransactionForm editTransaction={editTx} onClose={closeDrawer} />
+      </Drawer>
     </div>
   );
 }

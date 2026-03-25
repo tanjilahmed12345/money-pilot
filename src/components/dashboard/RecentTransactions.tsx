@@ -52,7 +52,7 @@ export function RecentTransactions() {
                   </div>
                 </div>
                 <span
-                  className="text-sm font-semibold"
+                  className="text-sm font-semibold tabular-nums"
                   style={{ color: t.type === "income" ? "var(--success)" : "var(--destructive)" }}
                 >
                   {t.type === "income" ? "+" : "-"}{formatCurrency(t.amount, currency)}
