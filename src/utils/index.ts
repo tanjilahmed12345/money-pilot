@@ -113,6 +113,23 @@ export function getPercentChange(current: number, previous: number): number | nu
   return ((current - previous) / previous) * 100;
 }
 
+export function getMonthlyIncome(transactions: Transaction[]): number {
+  return getTotalIncome(getThisMonthTransactions(transactions));
+}
+
+export function getLastMonthIncome(transactions: Transaction[]): number {
+  return getTotalIncome(getLastMonthTransactions(transactions));
+}
+
+export function getLastMonthExpense(transactions: Transaction[]): number {
+  return getTotalExpense(getLastMonthTransactions(transactions));
+}
+
+export function getSavingsRate(income: number, expense: number): number {
+  if (income <= 0) return 0;
+  return ((income - expense) / income) * 100;
+}
+
 export function getTopCategories(
   transactions: Transaction[],
   limit: number = 5
