@@ -8,8 +8,8 @@ import { TopSpending } from "@/components/dashboard/TopSpending";
 import { StatsBar } from "@/components/dashboard/StatsBar";
 import { ChartSkeleton } from "@/components/ui/Skeleton";
 
-const QuickExpenseChart = dynamic(
-  () => import("@/components/dashboard/QuickExpenseChart").then((m) => m.QuickExpenseChart),
+const SpendingBreakdown = dynamic(
+  () => import("@/components/dashboard/SpendingBreakdown").then((m) => m.SpendingBreakdown),
   { ssr: false, loading: () => <ChartSkeleton /> }
 );
 
@@ -29,7 +29,7 @@ export default function DashboardPage() {
           <TopSpending />
         </div>
       </div>
-      <QuickExpenseChart />
+      <SpendingBreakdown />
     </div>
   );
 }

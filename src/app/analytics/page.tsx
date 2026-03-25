@@ -51,7 +51,7 @@ export default function AnalyticsPage() {
         <>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Card>
-              <h2 className="text-lg font-semibold text-[var(--card-foreground)] mb-4">Category-wise Expenses</h2>
+              <h2 className="text-lg font-semibold text-[var(--card-foreground)] mb-2">Category-wise Expenses</h2>
               <CategoryPieChart />
             </Card>
             <Card>

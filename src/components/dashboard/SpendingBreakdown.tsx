@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useStore } from "@/store";
+import { useShallowStore } from "@/hooks/useShallowStore";
+import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { Badge } from "@/components/ui/Badge";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { formatCurrency, formatDate, getCurrentMonth, getMonthName } from "@/utils";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 interface SliceData {
   catId: string;
@@ -16,10 +19,12 @@ interface SliceData {
   percent: number;
 }
 
-export function CategoryPieChart() {
-  const transactions = useStore((s) => s.transactions);
-  const categories = useStore((s) => s.categories);
-  const currency = useStore((s) => s.settings.currency);
+export function SpendingBreakdown() {
+  const { transactions, categories, currency } = useShallowStore((s) => ({
+    transactions: s.transactions,
+    categories: s.categories,
+    currency: s.settings.currency,
+  }));
 
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -75,8 +80,9 @@ export function CategoryPieChart() {
   const isCurrentMonth = yearMonth === getCurrentMonth();
 
   return (
-    <>
+    <Card>
       <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold text-[var(--card-foreground)]">Spending Breakdown</h2>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={prev}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -92,49 +98,80 @@ export function CategoryPieChart() {
             </svg>
           </Button>
         </div>
-        {total > 0 && (
-          <span className="text-sm font-semibold text-[var(--muted-foreground)]">
-            {formatCurrency(total, currency)}
-          </span>
-        )}
       </div>
 
       {data.length === 0 ? (
-        <div className="flex items-center justify-center h-[300px] text-[var(--muted-foreground)]">
-          No expenses this month
-        </div>
+        <EmptyState icon="📊" title="No expenses this month" description="Expenses for this month will appear here" />
       ) : (
-        <ResponsiveContainer width="100%" height={350}>
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={70}
-              outerRadius={110}
-              paddingAngle={3}
-              dataKey="value"
-              isAnimationActive={false}
-              onClick={(_, index) => setDrillCat(data[index])}
-              className="cursor-pointer"
-              label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-            >
-              {data.map((entry, i) => (
-                <Cell key={i} fill={entry.color} stroke={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip
-              formatter={(value) => [`${currency}${Number(value).toFixed(2)}`, "Amount"]}
-              contentStyle={{
-                backgroundColor: "var(--card)",
-                border: "1px solid var(--border)",
-                borderRadius: "8px",
-                color: "var(--card-foreground)",
-              }}
-            />
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
+        <>
+          <div className="relative">
+            <ResponsiveContainer width="100%" height={280}>
+              <PieChart>
+                <Pie
+                  data={data}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={70}
+                  outerRadius={100}
+                  paddingAngle={3}
+                  dataKey="value"
+                  isAnimationActive={false}
+                  onClick={(_, index) => setDrillCat(data[index])}
+                  className="cursor-pointer"
+                >
+                  {data.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} stroke={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value) => [`${currency}${Number(value).toFixed(2)}`, "Amount"]}
+                  contentStyle={{
+                    backgroundColor: "var(--card)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "8px",
+                    color: "var(--card-foreground)",
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            {/* Center total */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="text-center">
+                <p className="text-xs text-[var(--muted-foreground)]">Total</p>
+                <p className="text-lg font-bold text-[var(--card-foreground)]">
+                  {formatCurrency(total, currency)}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Legend */}
+          <div className="mt-4 space-y-2">
+            {data.map((d) => (
+              <button
+                key={d.catId}
+                onClick={() => setDrillCat(d)}
+                className="flex items-center justify-between w-full rounded-lg px-3 py-2 text-left transition-colors hover:bg-[var(--accent)]/50"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm"
+                    style={{ backgroundColor: `${d.color}15` }}
+                  >
+                    {d.icon}
+                  </div>
+                  <span className="text-sm font-medium text-[var(--card-foreground)]">{d.name}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-semibold text-[var(--card-foreground)]">
+                    {formatCurrency(d.value, currency)}
+                  </span>
+                  <Badge color={d.color}>{d.percent.toFixed(0)}%</Badge>
+                </div>
+              </button>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Drill-down modal */}
@@ -172,6 +209,6 @@ export function CategoryPieChart() {
           </div>
         )}
       </Modal>
-    </>
+    </Card>
   );
 }
