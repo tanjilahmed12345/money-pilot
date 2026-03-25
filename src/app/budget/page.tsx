@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useStore } from "@/store";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -8,8 +8,23 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Modal } from "@/components/ui/Modal";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Badge } from "@/components/ui/Badge";
 import { formatCurrency, getCurrentMonth, getMonthName, getThisMonthTransactions } from "@/utils";
 import { useToast } from "@/components/ui/Toast";
+
+function getStatusColor(spent: number, budget: number) {
+  const pct = (spent / budget) * 100;
+  if (pct >= 90) return "var(--destructive)";
+  if (pct >= 75) return "var(--warning)";
+  return "var(--success)";
+}
+
+function getStatusLabel(pct: number) {
+  if (pct >= 100) return "Exceeded";
+  if (pct >= 90) return "Critical";
+  if (pct >= 75) return "Warning";
+  return "On track";
+}
 
 export default function BudgetPage() {
   const { budgets, setBudget, deleteBudget, categories, transactions, settings } = useStore();
@@ -25,6 +40,15 @@ export default function BudgetPage() {
 
   const monthBudgets = budgets.filter((b) => b.month === currentMonth);
   const catMap = Object.fromEntries(categories.map((c) => [c.id, c]));
+
+  // Compute previous month string
+  const prevMonth = useMemo(() => {
+    const [y, m] = currentMonth.split("-").map(Number);
+    const d = new Date(y, m - 2, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  }, [currentMonth]);
+
+  const prevMonthBudgets = budgets.filter((b) => b.month === prevMonth);
 
   const getCategorySpent = (categoryId: string) => {
     if (categoryId === "overall") {
@@ -45,12 +69,30 @@ export default function BudgetPage() {
     toast("Budget saved");
   };
 
-  const getStatusColor = (spent: number, budget: number) => {
-    const pct = (spent / budget) * 100;
-    if (pct >= 100) return "var(--destructive)";
-    if (pct >= 80) return "var(--warning)";
-    return "var(--success)";
+  const copyLastMonth = () => {
+    if (prevMonthBudgets.length === 0) {
+      toast("No budgets found for last month", "error");
+      return;
+    }
+    let copied = 0;
+    for (const b of prevMonthBudgets) {
+      const exists = monthBudgets.find((mb) => mb.category === b.category);
+      if (!exists) {
+        setBudget(b.category, b.amount, currentMonth);
+        copied++;
+      }
+    }
+    if (copied > 0) {
+      toast(`${copied} budget${copied !== 1 ? "s" : ""} copied from ${getMonthName(prevMonth)}`);
+    } else {
+      toast("All budgets already exist for this month", "info");
+    }
   };
+
+  // Summary stats
+  const totalBudget = monthBudgets.reduce((sum, b) => b.category !== "overall" ? sum + b.amount : sum, 0);
+  const totalSpent = monthBudgets.reduce((sum, b) => b.category !== "overall" ? sum + getCategorySpent(b.category) : sum, 0);
+  const exceededCount = monthBudgets.filter((b) => getCategorySpent(b.category) >= b.amount).length;
 
   const categoryOptions = [
     { value: "overall", label: "Overall Budget" },
@@ -64,21 +106,65 @@ export default function BudgetPage() {
           <h1 className="text-2xl font-bold text-[var(--foreground)]">Budget</h1>
           <p className="text-sm text-[var(--muted-foreground)] mt-1">{getMonthName(currentMonth)}</p>
         </div>
-        <Button onClick={() => setModalOpen(true)}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-          Set Budget
-        </Button>
+        <div className="flex gap-2">
+          {prevMonthBudgets.length > 0 && monthBudgets.length === 0 && (
+            <Button variant="secondary" onClick={copyLastMonth}>
+              Copy Last Month
+            </Button>
+          )}
+          <Button onClick={() => setModalOpen(true)}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Set Budget
+          </Button>
+        </div>
       </div>
 
+      {/* Summary cards */}
+      {monthBudgets.length > 0 && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Card>
+            <p className="text-sm text-[var(--muted-foreground)]">Total Budget</p>
+            <p className="mt-1 text-xl font-bold text-[var(--foreground)] tabular-nums">
+              {formatCurrency(totalBudget, currency)}
+            </p>
+          </Card>
+          <Card>
+            <p className="text-sm text-[var(--muted-foreground)]">Total Spent</p>
+            <p className="mt-1 text-xl font-bold tabular-nums" style={{ color: totalSpent > totalBudget ? "var(--destructive)" : "var(--foreground)" }}>
+              {formatCurrency(totalSpent, currency)}
+            </p>
+          </Card>
+          <Card>
+            <p className="text-sm text-[var(--muted-foreground)]">Status</p>
+            <div className="mt-1 flex items-center gap-2">
+              {exceededCount > 0 ? (
+                <>
+                  <span className="text-xl font-bold text-[var(--destructive)]">{exceededCount}</span>
+                  <span className="text-sm text-[var(--destructive)]">budget{exceededCount !== 1 ? "s" : ""} exceeded</span>
+                </>
+              ) : (
+                <span className="text-xl font-bold text-[var(--success)]">All on track</span>
+              )}
+            </div>
+          </Card>
+        </div>
+      )}
+
       {monthBudgets.length === 0 ? (
-        <EmptyState icon="💰" title="No budgets set" description="Set a monthly budget to track your spending" action={{ label: "Set Budget", onClick: () => setModalOpen(true) }} />
+        <EmptyState
+          icon="💰"
+          title="No budgets set"
+          description={`Set spending limits for ${getMonthName(currentMonth)} to track your budget`}
+          action={{ label: "Set Budget", onClick: () => setModalOpen(true) }}
+        />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {monthBudgets.map((b) => {
             const spent = getCategorySpent(b.category);
-            const pct = Math.min((spent / b.amount) * 100, 100);
+            const rawPct = (spent / b.amount) * 100;
+            const pct = Math.min(rawPct, 100);
             const statusColor = getStatusColor(spent, b.amount);
             const isOverall = b.category === "overall";
             const cat = isOverall ? null : catMap[b.category];
@@ -93,9 +179,16 @@ export default function BudgetPage() {
                     >
                       {isOverall ? "💳" : cat?.icon || "📦"}
                     </div>
-                    <h3 className="font-medium text-[var(--card-foreground)]">
-                      {isOverall ? "Overall Budget" : cat?.name || b.category}
-                    </h3>
+                    <div>
+                      <h3 className="font-medium text-[var(--card-foreground)]">
+                        {isOverall ? "Overall Budget" : cat?.name || b.category}
+                      </h3>
+                      <Badge
+                        color={statusColor === "var(--destructive)" ? "#ef4444" : statusColor === "var(--warning)" ? "#f59e0b" : "#22c55e"}
+                      >
+                        {getStatusLabel(rawPct)}
+                      </Badge>
+                    </div>
                   </div>
                   <Button variant="ghost" size="sm" onClick={() => { deleteBudget(b.id); toast("Budget deleted"); }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--destructive)" strokeWidth="2">
@@ -107,10 +200,10 @@ export default function BudgetPage() {
 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-[var(--muted-foreground)]">
+                    <span className="text-[var(--muted-foreground)] tabular-nums">
                       Spent: {formatCurrency(spent, currency)}
                     </span>
-                    <span className="text-[var(--muted-foreground)]">
+                    <span className="text-[var(--muted-foreground)] tabular-nums">
                       Budget: {formatCurrency(b.amount, currency)}
                     </span>
                   </div>
@@ -121,21 +214,28 @@ export default function BudgetPage() {
                     />
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span style={{ color: statusColor }} className="font-medium">
-                      {pct.toFixed(0)}% used
+                    <span style={{ color: statusColor }} className="font-medium tabular-nums">
+                      {rawPct.toFixed(0)}% used
                     </span>
-                    <span className="text-[var(--muted-foreground)]">
-                      {formatCurrency(Math.max(b.amount - spent, 0), currency)} remaining
+                    <span className="text-[var(--muted-foreground)] tabular-nums">
+                      {spent >= b.amount
+                        ? `${formatCurrency(spent - b.amount, currency)} over`
+                        : `${formatCurrency(b.amount - spent, currency)} remaining`}
                     </span>
                   </div>
-                  {spent >= b.amount && (
+                  {rawPct >= 90 && rawPct < 100 && (
                     <div className="mt-2 rounded-lg bg-[var(--destructive)]/10 px-3 py-2 text-xs font-medium text-[var(--destructive)]">
-                      Budget exceeded!
+                      Critical: {rawPct.toFixed(0)}% of budget used
                     </div>
                   )}
-                  {spent >= b.amount * 0.8 && spent < b.amount && (
+                  {rawPct >= 75 && rawPct < 90 && (
                     <div className="mt-2 rounded-lg bg-[var(--warning)]/10 px-3 py-2 text-xs font-medium text-[var(--warning)]">
-                      Warning: 80% of budget reached
+                      Warning: {rawPct.toFixed(0)}% of budget used
+                    </div>
+                  )}
+                  {spent >= b.amount && (
+                    <div className="mt-2 rounded-lg bg-[var(--destructive)]/10 px-3 py-2 text-xs font-medium text-[var(--destructive)]">
+                      Budget exceeded by {formatCurrency(spent - b.amount, currency)}!
                     </div>
                   )}
                 </div>
