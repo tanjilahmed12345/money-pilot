@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useStore } from "@/store";
-import { RecurringTransaction, TransactionType } from "@/types";
+import { RecurringTransaction, TransactionType, RecurringTag } from "@/types";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -10,21 +10,15 @@ import { Select } from "@/components/ui/Select";
 import { Modal } from "@/components/ui/Modal";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { formatCurrency } from "@/utils";
+import { formatCurrency, formatDate } from "@/utils";
 import { useToast } from "@/components/ui/Toast";
+import {
+  calcNextDueDate, advanceDueDate, isDueToday, isOverdue,
+  daysUntilDue, TAG_COLORS, TAG_LABELS,
+} from "@/lib/recurring";
 
 const FREQUENCY_LABELS: Record<string, string> = {
-  daily: "Daily",
-  weekly: "Weekly",
-  monthly: "Monthly",
-  yearly: "Yearly",
-};
-
-const FREQUENCY_COLORS: Record<string, string> = {
-  daily: "#ef4444",
-  weekly: "#f59e0b",
-  monthly: "#3b82f6",
-  yearly: "#8b5cf6",
+  daily: "Daily", weekly: "Weekly", monthly: "Monthly", yearly: "Yearly",
 };
 
 export default function RecurringPage() {
@@ -44,28 +38,94 @@ export default function RecurringPage() {
   const [category, setCategory] = useState("");
   const [notes, setNotes] = useState("");
   const [frequency, setFrequency] = useState<RecurringTransaction["frequency"]>("monthly");
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
+  const [tag, setTag] = useState<RecurringTag>("other");
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Auto-apply due transactions on mount
+  const autoApplied = useMemo(() => new Set<string>(), []);
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+    for (const r of recurringTransactions) {
+      if (r.paused || autoApplied.has(r.id)) continue;
+      const due = r.nextDueDate || calcNextDueDate(r.frequency, r.startDate);
+      if (due <= today) {
+        addTransaction({
+          title: r.title,
+          amount: r.amount,
+          type: r.type,
+          category: r.category,
+          date: today,
+          notes: r.notes ? `${r.notes} (auto-recurring)` : "Auto-recurring transaction",
+        });
+        updateRecurring(r.id, { nextDueDate: advanceDueDate(r.frequency, due) });
+        autoApplied.add(r.id);
+        toast(`Auto-applied: ${r.title}`, "info");
+      }
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Enrich with computed due dates
+  const enriched = useMemo(() =>
+    recurringTransactions.map((r) => {
+      const nextDue = r.nextDueDate || calcNextDueDate(r.frequency, r.startDate);
+      const days = daysUntilDue(nextDue);
+      return { ...r, nextDue, days, due: isDueToday(nextDue), overdue: isOverdue(nextDue) };
+    }).sort((a, b) => {
+      if (a.paused !== b.paused) return a.paused ? 1 : -1;
+      return (a.nextDue || "").localeCompare(b.nextDue || "");
+    }),
+    [recurringTransactions]
+  );
+
+  const activeCount = enriched.filter((r) => !r.paused).length;
+  const totalMonthly = useMemo(() => {
+    return enriched
+      .filter((r) => !r.paused && r.type === "expense")
+      .reduce((sum, r) => {
+        switch (r.frequency) {
+          case "daily": return sum + r.amount * 30;
+          case "weekly": return sum + r.amount * 4.33;
+          case "monthly": return sum + r.amount;
+          case "yearly": return sum + r.amount / 12;
+          default: return sum;
+        }
+      }, 0);
+  }, [enriched]);
+
+  const togglePause = useCallback((r: RecurringTransaction) => {
+    updateRecurring(r.id, { paused: !r.paused });
+    toast(r.paused ? `${r.title} resumed` : `${r.title} paused`);
+  }, [updateRecurring, toast]);
+
+  const applyNow = useCallback((r: typeof enriched[number]) => {
+    addTransaction({
+      title: r.title,
+      amount: r.amount,
+      type: r.type,
+      category: r.category,
+      date: new Date().toISOString().split("T")[0],
+      notes: r.notes ? `${r.notes} (recurring)` : "Recurring transaction",
+    });
+    updateRecurring(r.id, { nextDueDate: advanceDueDate(r.frequency, r.nextDue) });
+    toast("Transaction applied");
+  }, [addTransaction, updateRecurring, toast]);
 
   const openAdd = () => {
     setEditItem(null);
-    setTitle("");
-    setAmount("");
-    setType("expense");
-    setCategory("");
-    setNotes("");
-    setFrequency("monthly");
+    setTitle(""); setAmount(""); setType("expense"); setCategory("");
+    setNotes(""); setFrequency("monthly"); setTag("other");
+    setStartDate(new Date().toISOString().split("T")[0]);
     setErrors({});
     setModalOpen(true);
   };
 
   const openEdit = (r: RecurringTransaction) => {
     setEditItem(r);
-    setTitle(r.title);
-    setAmount(String(r.amount));
-    setType(r.type);
-    setCategory(r.category);
-    setNotes(r.notes);
-    setFrequency(r.frequency);
+    setTitle(r.title); setAmount(String(r.amount)); setType(r.type);
+    setCategory(r.category); setNotes(r.notes); setFrequency(r.frequency);
+    setStartDate(r.startDate || new Date().toISOString().split("T")[0]);
+    setTag(r.tag || "other");
     setErrors({});
     setModalOpen(true);
   };
@@ -81,13 +141,11 @@ export default function RecurringPage() {
 
   const handleSave = () => {
     if (!validate()) return;
+    const nextDue = calcNextDueDate(frequency, startDate);
     const data = {
-      title: title.trim(),
-      amount: Number(amount),
-      type,
-      category,
-      notes: notes.trim(),
-      frequency,
+      title: title.trim(), amount: Number(amount), type, category,
+      notes: notes.trim(), frequency, startDate, tag,
+      nextDueDate: nextDue, paused: editItem?.paused || false,
     };
     if (editItem) {
       updateRecurring(editItem.id, data);
@@ -99,21 +157,16 @@ export default function RecurringPage() {
     setModalOpen(false);
   };
 
-  const applyNow = (r: RecurringTransaction) => {
-    addTransaction({
-      title: r.title,
-      amount: r.amount,
-      type: r.type,
-      category: r.category,
-      date: new Date().toISOString().split("T")[0],
-      notes: r.notes ? `${r.notes} (recurring)` : "Recurring transaction",
-    });
-    toast("Transaction applied");
-  };
-
   const categoryOptions = [
     { value: "", label: "Select category" },
     ...categories.map((c) => ({ value: c.id, label: `${c.icon} ${c.name}` })),
+  ];
+
+  const tagOptions: { value: RecurringTag; label: string }[] = [
+    { value: "subscription", label: "Subscription" },
+    { value: "bill", label: "Bill" },
+    { value: "income", label: "Income" },
+    { value: "other", label: "Other" },
   ];
 
   return (
@@ -122,18 +175,40 @@ export default function RecurringPage() {
         <div>
           <h1 className="text-2xl font-bold text-[var(--foreground)]">Recurring Transactions</h1>
           <p className="text-sm text-[var(--muted-foreground)] mt-1">
-            Templates for repeating income and expenses
+            Manage subscriptions, bills, and repeating payments
           </p>
         </div>
         <Button onClick={openAdd}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M12 5v14M5 12h14" />
           </svg>
-          Add Template
+          Add
         </Button>
       </div>
 
-      {recurringTransactions.length === 0 ? (
+      {/* Summary */}
+      {enriched.length > 0 && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Card>
+            <p className="text-sm text-[var(--muted-foreground)]">Active</p>
+            <p className="mt-1 text-xl font-bold text-[var(--foreground)]">{activeCount}</p>
+          </Card>
+          <Card>
+            <p className="text-sm text-[var(--muted-foreground)]">Est. Monthly Cost</p>
+            <p className="mt-1 text-xl font-bold text-[var(--destructive)] tabular-nums">
+              {formatCurrency(totalMonthly, currency)}
+            </p>
+          </Card>
+          <Card>
+            <p className="text-sm text-[var(--muted-foreground)]">Paused</p>
+            <p className="mt-1 text-xl font-bold text-[var(--muted-foreground)]">
+              {enriched.length - activeCount}
+            </p>
+          </Card>
+        </div>
+      )}
+
+      {enriched.length === 0 ? (
         <EmptyState
           icon="🔄"
           title="No recurring transactions"
@@ -141,54 +216,85 @@ export default function RecurringPage() {
           action={{ label: "Add Template", onClick: openAdd }}
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {recurringTransactions.map((r) => {
+        <div className="space-y-2">
+          {enriched.map((r) => {
             const cat = catMap[r.category];
-            const isIncome = r.type === "income";
+            const tagColor = TAG_COLORS[r.tag || "other"];
+            const daysText = r.days !== null
+              ? r.days === 0 ? "Due today" : r.days < 0 ? `${Math.abs(r.days)}d overdue` : `${r.days}d`
+              : null;
+
             return (
-              <Card key={r.id}>
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-lg"
-                      style={{ backgroundColor: `${cat?.color || "#6b7280"}15` }}
-                    >
-                      {cat?.icon || "📦"}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-[var(--card-foreground)]">{r.title}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        {cat && <Badge color={cat.color}>{cat.name}</Badge>}
-                        <Badge color={FREQUENCY_COLORS[r.frequency]}>
-                          {FREQUENCY_LABELS[r.frequency]}
-                        </Badge>
-                      </div>
-                    </div>
+              <div
+                key={r.id}
+                className={`flex items-center gap-4 rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-3 transition-colors ${
+                  r.paused ? "opacity-50" : ""
+                }`}
+              >
+                {/* Color indicator */}
+                <div className="w-1 h-10 rounded-full shrink-0" style={{ backgroundColor: tagColor }} />
+
+                {/* Icon */}
+                <div
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-lg"
+                  style={{ backgroundColor: `${cat?.color || "#6b7280"}15` }}
+                >
+                  {cat?.icon || "📦"}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-[var(--card-foreground)] truncate">{r.title}</p>
+                    {r.paused && <Badge color="#6b7280">Paused</Badge>}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                    <Badge color={tagColor}>{TAG_LABELS[r.tag || "other"]}</Badge>
+                    <span className="text-xs text-[var(--muted-foreground)]">{FREQUENCY_LABELS[r.frequency]}</span>
+                    {r.nextDue && !r.paused && (
+                      <span className={`text-xs font-medium ${
+                        r.overdue || r.due ? "text-[var(--destructive)]" : "text-[var(--muted-foreground)]"
+                      }`}>
+                        {daysText} · {formatDate(r.nextDue)}
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between mb-3">
-                  <span
-                    className="text-lg font-bold"
-                    style={{ color: r.type === "transfer" ? "var(--primary)" : isIncome ? "var(--success)" : "var(--destructive)" }}
+                {/* Amount */}
+                <span
+                  className="text-sm font-bold tabular-nums whitespace-nowrap shrink-0"
+                  style={{ color: r.type === "transfer" ? "var(--primary)" : r.type === "income" ? "var(--success)" : "var(--destructive)" }}
+                >
+                  {r.type === "transfer" ? "↔ " : r.type === "income" ? "+" : "-"}{formatCurrency(r.amount, currency)}
+                </span>
+
+                {/* Actions */}
+                <div className="flex items-center gap-1 shrink-0">
+                  {!r.paused && (
+                    <Button variant="primary" size="sm" onClick={() => applyNow(r)}>
+                      Apply
+                    </Button>
+                  )}
+                  <button
+                    onClick={() => togglePause(r)}
+                    title={r.paused ? "Resume" : "Pause"}
+                    className={`rounded-lg p-1.5 transition-colors ${
+                      r.paused
+                        ? "text-[var(--success)] hover:bg-[var(--success)]/10"
+                        : "text-[var(--muted-foreground)] hover:bg-[var(--accent)]"
+                    }`}
                   >
-                    {r.type === "transfer" ? "↔ " : isIncome ? "+" : "-"}{formatCurrency(r.amount, currency)}
-                  </span>
-                  <Badge color={r.type === "transfer" ? "#2563eb" : isIncome ? "#22c55e" : "#ef4444"}>
-                    {r.type}
-                  </Badge>
-                </div>
-
-                {r.notes && (
-                  <p className="text-xs text-[var(--muted-foreground)] mb-3 truncate" title={r.notes}>
-                    {r.notes}
-                  </p>
-                )}
-
-                <div className="flex gap-2 pt-2 border-t border-[var(--border)]">
-                  <Button variant="primary" size="sm" className="flex-1" onClick={() => applyNow(r)}>
-                    Apply Now
-                  </Button>
+                    {r.paused ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                        <polygon points="5 3 19 12 5 21 5 3" />
+                      </svg>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" />
+                      </svg>
+                    )}
+                  </button>
                   <Button variant="ghost" size="sm" onClick={() => openEdit(r)}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
@@ -201,7 +307,7 @@ export default function RecurringPage() {
                     </svg>
                   </Button>
                 </div>
-              </Card>
+              </div>
             );
           })}
         </div>
@@ -213,100 +319,45 @@ export default function RecurringPage() {
         title={editItem ? "Edit Template" : "Add Recurring Template"}
       >
         <div className="space-y-4">
-          <Input
-            label="Title"
-            id="rec-title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g., Netflix Subscription"
-          />
+          <Input label="Title" id="rec-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g., Netflix Subscription" />
           {errors.title && <p className="text-xs text-[var(--destructive)] -mt-3">{errors.title}</p>}
 
-          <Input
-            label="Amount"
-            id="rec-amount"
-            type="number"
-            step="0.01"
-            min="0"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="0.00"
-          />
+          <Input label="Amount" id="rec-amount" type="number" step="0.01" min="0" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" />
           {errors.amount && <p className="text-xs text-[var(--destructive)] -mt-3">{errors.amount}</p>}
 
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setType("expense")}
-              className={`flex-1 rounded-lg border-2 py-2.5 text-sm font-medium transition-all ${
-                type === "expense"
-                  ? "border-[var(--destructive)] bg-[var(--destructive)]/10 text-[var(--destructive)]"
-                  : "border-[var(--border)] text-[var(--muted-foreground)]"
-              }`}
-            >
-              Expense
-            </button>
-            <button
-              type="button"
-              onClick={() => setType("income")}
-              className={`flex-1 rounded-lg border-2 py-2.5 text-sm font-medium transition-all ${
-                type === "income"
-                  ? "border-[var(--success)] bg-[var(--success)]/10 text-[var(--success)]"
-                  : "border-[var(--border)] text-[var(--muted-foreground)]"
-              }`}
-            >
-              Income
-            </button>
-            <button
-              type="button"
-              onClick={() => setType("transfer")}
-              className={`flex-1 rounded-lg border-2 py-2.5 text-sm font-medium transition-all ${
-                type === "transfer"
-                  ? "border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--primary)]"
-                  : "border-[var(--border)] text-[var(--muted-foreground)]"
-              }`}
-            >
-              Transfer
-            </button>
+            {(["expense", "income", "transfer"] as const).map((t) => (
+              <button key={t} type="button" onClick={() => setType(t)}
+                className={`flex-1 rounded-lg border-2 py-2.5 text-sm font-medium transition-all ${
+                  type === t
+                    ? t === "expense" ? "border-[var(--destructive)] bg-[var(--destructive)]/10 text-[var(--destructive)]"
+                      : t === "income" ? "border-[var(--success)] bg-[var(--success)]/10 text-[var(--success)]"
+                      : "border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--primary)]"
+                    : "border-[var(--border)] text-[var(--muted-foreground)]"
+                }`}
+              >{t.charAt(0).toUpperCase() + t.slice(1)}</button>
+            ))}
           </div>
 
-          <Select
-            label="Category"
-            id="rec-category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            options={categoryOptions}
-          />
+          <Select label="Tag" id="rec-tag" value={tag} onChange={(e) => setTag(e.target.value as RecurringTag)} options={tagOptions} />
+          <Select label="Category" id="rec-category" value={category} onChange={(e) => setCategory(e.target.value)} options={categoryOptions} />
           {errors.category && <p className="text-xs text-[var(--destructive)] -mt-3">{errors.category}</p>}
 
-          <Select
-            label="Frequency"
-            id="rec-frequency"
-            value={frequency}
+          <Select label="Frequency" id="rec-frequency" value={frequency}
             onChange={(e) => setFrequency(e.target.value as RecurringTransaction["frequency"])}
             options={[
-              { value: "daily", label: "Daily" },
-              { value: "weekly", label: "Weekly" },
-              { value: "monthly", label: "Monthly" },
-              { value: "yearly", label: "Yearly" },
+              { value: "daily", label: "Daily" }, { value: "weekly", label: "Weekly" },
+              { value: "monthly", label: "Monthly" }, { value: "yearly", label: "Yearly" },
             ]}
           />
 
-          <Input
-            label="Notes"
-            id="rec-notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Optional notes..."
-          />
+          <Input label="Start Date" id="rec-start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+
+          <Input label="Notes" id="rec-notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional notes..." />
 
           <div className="flex gap-3 pt-2">
-            <Button variant="secondary" onClick={() => setModalOpen(false)} className="flex-1">
-              Cancel
-            </Button>
-            <Button onClick={handleSave} className="flex-1">
-              {editItem ? "Update" : "Create"} Template
-            </Button>
+            <Button variant="secondary" onClick={() => setModalOpen(false)} className="flex-1">Cancel</Button>
+            <Button onClick={handleSave} className="flex-1">{editItem ? "Update" : "Create"} Template</Button>
           </div>
         </div>
       </Modal>

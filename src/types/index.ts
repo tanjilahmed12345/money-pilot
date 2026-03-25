@@ -32,6 +32,8 @@ export interface Settings {
   currency: Currency;
 }
 
+export type RecurringTag = "subscription" | "bill" | "income" | "other";
+
 export interface RecurringTransaction {
   id: string;
   title: string;
@@ -40,6 +42,10 @@ export interface RecurringTransaction {
   category: string;
   notes: string;
   frequency: "daily" | "weekly" | "monthly" | "yearly";
+  startDate?: string;
+  nextDueDate?: string;
+  paused?: boolean;
+  tag?: RecurringTag;
 }
 
 export interface SavingsGoal {
