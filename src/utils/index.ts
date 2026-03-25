@@ -76,6 +76,7 @@ export function getMonthlyData(
 ): { month: string; income: number; expense: number }[] {
   const map: Record<string, { income: number; expense: number }> = {};
   transactions.forEach((t) => {
+    if (t.type === "transfer") return;
     const month = t.date.substring(0, 7);
     if (!map[month]) map[month] = { income: 0, expense: 0 };
     map[month][t.type] += t.amount;

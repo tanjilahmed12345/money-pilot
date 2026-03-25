@@ -36,6 +36,7 @@ export function TransactionFilters({ filters, onChange }: TransactionFiltersProp
             { value: "all", label: "All types" },
             { value: "income", label: "Income" },
             { value: "expense", label: "Expense" },
+            { value: "transfer", label: "Transfer" },
           ]}
         />
         <Select

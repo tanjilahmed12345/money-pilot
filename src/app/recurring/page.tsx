@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useStore } from "@/store";
-import { RecurringTransaction } from "@/types";
+import { RecurringTransaction, TransactionType } from "@/types";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -40,7 +40,7 @@ export default function RecurringPage() {
   const [editItem, setEditItem] = useState<RecurringTransaction | null>(null);
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
-  const [type, setType] = useState<"income" | "expense">("expense");
+  const [type, setType] = useState<TransactionType>("expense");
   const [category, setCategory] = useState("");
   const [notes, setNotes] = useState("");
   const [frequency, setFrequency] = useState<RecurringTransaction["frequency"]>("monthly");
@@ -170,11 +170,11 @@ export default function RecurringPage() {
                 <div className="flex items-center justify-between mb-3">
                   <span
                     className="text-lg font-bold"
-                    style={{ color: isIncome ? "var(--success)" : "var(--destructive)" }}
+                    style={{ color: r.type === "transfer" ? "var(--primary)" : isIncome ? "var(--success)" : "var(--destructive)" }}
                   >
-                    {isIncome ? "+" : "-"}{formatCurrency(r.amount, currency)}
+                    {r.type === "transfer" ? "↔ " : isIncome ? "+" : "-"}{formatCurrency(r.amount, currency)}
                   </span>
-                  <Badge color={isIncome ? "#22c55e" : "#ef4444"}>
+                  <Badge color={r.type === "transfer" ? "#2563eb" : isIncome ? "#22c55e" : "#ef4444"}>
                     {r.type}
                   </Badge>
                 </div>
@@ -234,7 +234,7 @@ export default function RecurringPage() {
           />
           {errors.amount && <p className="text-xs text-[var(--destructive)] -mt-3">{errors.amount}</p>}
 
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <button
               type="button"
               onClick={() => setType("expense")}
@@ -256,6 +256,17 @@ export default function RecurringPage() {
               }`}
             >
               Income
+            </button>
+            <button
+              type="button"
+              onClick={() => setType("transfer")}
+              className={`flex-1 rounded-lg border-2 py-2.5 text-sm font-medium transition-all ${
+                type === "transfer"
+                  ? "border-[var(--primary)] bg-[var(--primary)]/10 text-[var(--primary)]"
+                  : "border-[var(--border)] text-[var(--muted-foreground)]"
+              }`}
+            >
+              Transfer
             </button>
           </div>
 

@@ -79,6 +79,9 @@ export function TransactionList({ transactions, onEdit }: TransactionListProps) 
         {paginated.map((t) => {
           const cat = catMap[t.category];
           const isIncome = t.type === "income";
+          const isTransfer = t.type === "transfer";
+          const amountColor = isTransfer ? "var(--primary)" : isIncome ? "var(--success)" : "var(--destructive)";
+          const amountPrefix = isTransfer ? "↔ " : isIncome ? "+" : "-";
           return (
             <div
               key={t.id}
@@ -108,9 +111,9 @@ export function TransactionList({ transactions, onEdit }: TransactionListProps) 
               <div className="flex items-center gap-3 shrink-0 ml-3">
                 <span
                   className="text-sm font-semibold whitespace-nowrap tabular-nums"
-                  style={{ color: isIncome ? "var(--success)" : "var(--destructive)" }}
+                  style={{ color: amountColor }}
                 >
-                  {isIncome ? "+" : "-"}{formatCurrency(t.amount, currency)}
+                  {amountPrefix}{formatCurrency(t.amount, currency)}
                 </span>
                 <div className="flex gap-1">
                   <Button variant="ghost" size="sm" onClick={(e) => duplicateTransaction(e, t)} title="Duplicate">

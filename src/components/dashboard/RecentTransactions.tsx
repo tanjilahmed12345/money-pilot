@@ -53,9 +53,9 @@ export function RecentTransactions() {
                 </div>
                 <span
                   className="text-sm font-semibold tabular-nums"
-                  style={{ color: t.type === "income" ? "var(--success)" : "var(--destructive)" }}
+                  style={{ color: t.type === "transfer" ? "var(--primary)" : t.type === "income" ? "var(--success)" : "var(--destructive)" }}
                 >
-                  {t.type === "income" ? "+" : "-"}{formatCurrency(t.amount, currency)}
+                  {t.type === "transfer" ? "↔ " : t.type === "income" ? "+" : "-"}{formatCurrency(t.amount, currency)}
                 </span>
               </div>
             );
