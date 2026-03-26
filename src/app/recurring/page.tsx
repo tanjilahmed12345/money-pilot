@@ -188,18 +188,18 @@ export default function RecurringPage() {
 
       {/* Summary */}
       {enriched.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 sm:gap-4">
-          <Card>
+        <div id="recurring-summary" className="grid grid-cols-3 gap-3 sm:gap-4">
+          <Card id="active-recurring">
             <p className="text-[10px] sm:text-sm text-[var(--muted-foreground)]">Active</p>
             <p className="mt-1 text-xl font-bold text-[var(--foreground)]">{activeCount}</p>
           </Card>
-          <Card>
+          <Card id="monthly-cost">
             <p className="text-sm text-[var(--muted-foreground)]">Est. Monthly Cost</p>
             <p className="mt-1 text-xl font-bold text-[var(--destructive)] tabular-nums">
               {formatCurrency(totalMonthly, currency)}
             </p>
           </Card>
-          <Card>
+          <Card id="paused-recurring">
             <p className="text-sm text-[var(--muted-foreground)]">Paused</p>
             <p className="mt-1 text-xl font-bold text-[var(--muted-foreground)]">
               {enriched.length - activeCount}
@@ -216,7 +216,7 @@ export default function RecurringPage() {
           action={{ label: "Add Template", onClick: openAdd }}
         />
       ) : (
-        <div className="space-y-2">
+        <div id="recurring-items" className="space-y-2">
           {enriched.map((r) => {
             const cat = catMap[r.category];
             const tagColor = TAG_COLORS[r.tag || "other"];

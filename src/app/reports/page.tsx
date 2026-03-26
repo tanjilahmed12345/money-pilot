@@ -168,14 +168,14 @@ export default function ReportsPage() {
         ) : (
           <div className="px-8 py-6 space-y-8">
             {/* Key metrics */}
-            <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
-              <div>
+            <div id="key-metrics" className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
+              <div id="total-income">
                 <p className="text-xs font-medium text-gray-500 uppercase">Total Income</p>
                 <p className="mt-1 text-lg sm:text-2xl font-bold text-green-600 tabular-nums truncate">
                   {formatCurrency(report.income, currency)}
                 </p>
               </div>
-              <div>
+              <div id="total-expenses">
                 <p className="text-xs font-medium text-gray-500 uppercase">Total Expenses</p>
                 <p className="mt-1 text-lg sm:text-2xl font-bold text-red-600 tabular-nums truncate">
                   {formatCurrency(report.expense, currency)}
@@ -197,7 +197,7 @@ export default function ReportsPage() {
             </div>
 
             {/* Top 5 spending categories */}
-            <div>
+            <div id="top-categories">
               <h3 className="text-sm font-semibold text-gray-700 uppercase mb-3">Top Spending Categories</h3>
               {report.topCategories.length === 0 ? (
                 <p className="text-sm text-gray-400">No expense data</p>
@@ -258,7 +258,7 @@ export default function ReportsPage() {
             )}
 
             {/* Income vs Expense summary bar */}
-            <div>
+            <div id="income-vs-expenses">
               <h3 className="text-sm font-semibold text-gray-700 uppercase mb-3">Income vs Expenses</h3>
               <div className="space-y-2">
                 <div>

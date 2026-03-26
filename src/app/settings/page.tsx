@@ -94,7 +94,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Appearance */}
-      <Card>
+      <Card id="appearance">
         <h2 className="text-lg font-semibold text-[var(--card-foreground)] mb-4">Appearance</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Select
@@ -119,7 +119,7 @@ export default function SettingsPage() {
       </Card>
 
       {/* Categories */}
-      <Card>
+      <Card id="categories-section">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-[var(--card-foreground)]">Categories</h2>
           <div className="flex gap-2">
@@ -164,7 +164,7 @@ export default function SettingsPage() {
       </Card>
 
       {/* Data Management */}
-      <Card>
+      <Card id="data-management">
         <h2 className="text-lg font-semibold text-[var(--card-foreground)] mb-4">Data Management</h2>
         <div className="flex flex-wrap gap-3">
           <Button variant="secondary" onClick={handleExportJSON}>
@@ -187,7 +187,7 @@ export default function SettingsPage() {
       </Card>
 
       {/* Danger Zone */}
-      <Card className="border-[var(--destructive)]/30">
+      <Card id="danger-zone" className="border-[var(--destructive)]/30">
         <h2 className="text-lg font-semibold text-[var(--destructive)] mb-4">Danger Zone</h2>
         <p className="text-sm text-[var(--muted-foreground)] mb-4">
           This will permanently delete all your data including transactions, budgets, and settings.

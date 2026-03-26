@@ -178,22 +178,22 @@ export default function GoalsPage() {
 
       {/* Summary Cards */}
       {savingsGoals.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          <Card>
+        <div id="goals-summary" className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          <Card id="total-saved">
             <p className="text-sm text-[var(--muted-foreground)]">Total Saved</p>
             <p className="mt-1 text-xl font-bold text-[var(--success)] tabular-nums">{formatCurrency(totalSaved, currency)}</p>
           </Card>
-          <Card>
+          <Card id="total-target">
             <p className="text-sm text-[var(--muted-foreground)]">Total Target</p>
             <p className="mt-1 text-xl font-bold text-[var(--primary)] tabular-nums">{formatCurrency(totalTarget, currency)}</p>
           </Card>
-          <Card>
+          <Card id="overall-progress">
             <p className="text-sm text-[var(--muted-foreground)]">Overall Progress</p>
             <p className="mt-1 text-xl font-bold text-[var(--foreground)]">
               {totalTarget > 0 ? ((totalSaved / totalTarget) * 100).toFixed(1) : 0}%
             </p>
           </Card>
-          <Card>
+          <Card id="avg-savings">
             <p className="text-sm text-[var(--muted-foreground)]">Avg Monthly Savings</p>
             <p className="mt-1 text-xl font-bold text-[var(--foreground)] tabular-nums">
               {formatCurrency(monthlySavingsRate, currency)}
@@ -210,7 +210,7 @@ export default function GoalsPage() {
           action={{ label: "Create Goal", onClick: openAdd }}
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div id="goals-list" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {savingsGoals.map((g) => {
             const pct = Math.min((g.savedAmount / g.targetAmount) * 100, 100);
             const isComplete = g.savedAmount >= g.targetAmount;

@@ -87,7 +87,7 @@ export default function AnalyticsPage() {
         <>
           {/* Anomaly alerts */}
           {anomalies.length > 0 && (
-            <Card>
+            <Card id="spending-anomalies">
               <h2 className="text-sm font-semibold text-[var(--warning)] uppercase mb-3">
                 Spending Anomalies This Month
               </h2>
@@ -116,17 +116,17 @@ export default function AnalyticsPage() {
           )}
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <Card>
+            <Card id="category-expenses">
               <h2 className="text-lg font-semibold text-[var(--card-foreground)] mb-2">Category-wise Expenses</h2>
               <CategoryPieChart />
             </Card>
-            <Card>
+            <Card id="monthly-overview">
               <h2 className="text-lg font-semibold text-[var(--card-foreground)] mb-4">Monthly Overview</h2>
               <MonthlyBarChart />
             </Card>
           </div>
 
-          <Card>
+          <Card id="spending-trend">
             <h2 className="text-lg font-semibold text-[var(--card-foreground)] mb-4">Spending Trend</h2>
             <SpendingTrendChart />
           </Card>
@@ -134,7 +134,7 @@ export default function AnalyticsPage() {
       ) : (
         <>
           {/* Trends tab */}
-          <Card>
+          <Card id="category-trends">
             <h2 className="text-lg font-semibold text-[var(--card-foreground)] mb-4">
               Category Spending Trends (12 Months)
             </h2>
@@ -143,7 +143,7 @@ export default function AnalyticsPage() {
 
           {/* Anomaly detail table */}
           {anomalies.length > 0 && (
-            <Card>
+            <Card id="categories-above-avg">
               <h2 className="text-lg font-semibold text-[var(--card-foreground)] mb-4">
                 Categories Above Average
               </h2>

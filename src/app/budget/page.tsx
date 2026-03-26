@@ -123,16 +123,16 @@ export default function BudgetPage() {
 
       {/* Summary cards */}
       {monthBudgets.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 sm:gap-4">
-          <Card>
+        <div id="budget-summary" className="grid grid-cols-3 gap-3 sm:gap-4">
+          <Card id="total-budget">
             <p className="text-[10px] sm:text-sm text-[var(--muted-foreground)]">Total Budget</p>
             <p className="mt-1 text-base sm:text-xl font-bold text-[var(--foreground)] tabular-nums truncate">
               {formatCurrency(totalBudget, currency)}
             </p>
           </Card>
           <Card>
-            <p className="text-[10px] sm:text-sm text-[var(--muted-foreground)]">Total Spent</p>
-            <p className="mt-1 text-base sm:text-xl font-bold tabular-nums truncate" style={{ color: totalSpent > totalBudget ? "var(--destructive)" : "var(--foreground)" }}>
+            <p className="text-sm text-[var(--muted-foreground)]">Total Spent</p>
+            <p className="mt-1 text-xl font-bold tabular-nums" style={{ color: totalSpent > totalBudget ? "var(--destructive)" : "var(--foreground)" }}>
               {formatCurrency(totalSpent, currency)}
             </p>
           </Card>
@@ -160,7 +160,7 @@ export default function BudgetPage() {
           action={{ label: "Set Budget", onClick: () => setModalOpen(true) }}
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div id="budget-items" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {monthBudgets.map((b) => {
             const spent = getCategorySpent(b.category);
             const rawPct = (spent / b.amount) * 100;
