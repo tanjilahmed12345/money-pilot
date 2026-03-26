@@ -1,16 +1,16 @@
 "use client";
 
 import { useMemo } from "react";
-import { useStore } from "@/store";
+import { useShallowStore } from "@/hooks/useShallowStore";
 import { formatCurrency } from "@/utils";
 import { detectAnomalies } from "@/lib/anomaly";
 import { Badge } from "@/components/ui/Badge";
 import Link from "next/link";
 
 export function SpendingAnomalyAlerts() {
-  const transactions = useStore((s) => s.transactions);
-  const categories = useStore((s) => s.categories);
-  const currency = useStore((s) => s.settings.currency);
+  const { transactions, categories, currency } = useShallowStore((s) => ({
+    transactions: s.transactions, categories: s.categories, currency: s.settings.currency,
+  }));
 
   const anomalies = useMemo(
     () => detectAnomalies(transactions, categories),

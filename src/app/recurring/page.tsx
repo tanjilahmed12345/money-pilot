@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useStore } from "@/store";
+import { useShallowStore } from "@/hooks/useShallowStore";
 import { RecurringTransaction, TransactionType, RecurringTag } from "@/types";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -22,11 +23,15 @@ const FREQUENCY_LABELS: Record<string, string> = {
 };
 
 export default function RecurringPage() {
-  const {
-    recurringTransactions, addRecurring, updateRecurring, deleteRecurring,
-    categories, addTransaction, settings,
-  } = useStore();
-  const currency = settings.currency;
+  const { recurringTransactions, categories, currency } = useShallowStore((s) => ({
+    recurringTransactions: s.recurringTransactions,
+    categories: s.categories,
+    currency: s.settings.currency,
+  }));
+  const addRecurring = useStore((s) => s.addRecurring);
+  const updateRecurring = useStore((s) => s.updateRecurring);
+  const deleteRecurring = useStore((s) => s.deleteRecurring);
+  const addTransaction = useStore((s) => s.addTransaction);
   const { toast } = useToast();
   const catMap = Object.fromEntries(categories.map((c) => [c.id, c]));
 

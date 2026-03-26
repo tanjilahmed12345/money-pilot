@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useStore } from "@/store";
+import { useShallowStore } from "@/hooks/useShallowStore";
 import { Asset, Liability, AssetType, LiabilityType } from "@/types";
 import { Card, CardTitle, CardValue } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -42,13 +43,19 @@ const LIABILITY_OPTIONS: { value: LiabilityType; label: string }[] = [
 ];
 
 export default function NetWorthPage() {
-  const {
-    assets, liabilities, netWorthSnapshots,
-    addAsset, updateAsset, deleteAsset,
-    addLiability, updateLiability, deleteLiability,
-    takeSnapshot, settings,
-  } = useStore();
-  const currency = settings.currency;
+  const { assets, liabilities, netWorthSnapshots, currency } = useShallowStore((s) => ({
+    assets: s.assets,
+    liabilities: s.liabilities,
+    netWorthSnapshots: s.netWorthSnapshots,
+    currency: s.settings.currency,
+  }));
+  const addAsset = useStore((s) => s.addAsset);
+  const updateAsset = useStore((s) => s.updateAsset);
+  const deleteAsset = useStore((s) => s.deleteAsset);
+  const addLiability = useStore((s) => s.addLiability);
+  const updateLiability = useStore((s) => s.updateLiability);
+  const deleteLiability = useStore((s) => s.deleteLiability);
+  const takeSnapshot = useStore((s) => s.takeSnapshot);
   const { toast } = useToast();
 
   const [assetModal, setAssetModal] = useState(false);

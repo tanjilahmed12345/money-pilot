@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
+import { useStore } from "@/store";
 
+// SSR-safe hydration check using Zustand persist API
+// Returns true once the store has loaded from localStorage
+// Uses useSyncExternalStore to avoid the double-render (false → true) pattern
 export function useHydration() {
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
-
-  return hydrated;
+  return useSyncExternalStore(
+    (onStoreChange) => useStore.persist.onFinishHydration(onStoreChange),
+    () => useStore.persist.hasHydrated(),
+    () => false // SSR always returns false
+  );
 }

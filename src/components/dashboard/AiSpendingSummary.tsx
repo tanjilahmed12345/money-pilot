@@ -2,16 +2,16 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useStore } from "@/store";
+import { useShallowStore } from "@/hooks/useShallowStore";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { getTotalIncome, getTotalExpense } from "@/utils";
 
 export function AiSpendingSummary() {
-  const transactions = useStore((s) => s.transactions);
-  const categories = useStore((s) => s.categories);
-  const currency = useStore((s) => s.settings.currency);
-  const aiSummary = useStore((s) => s.aiSummary);
+  const { transactions, categories, currency, aiSummary } = useShallowStore((s) => ({
+    transactions: s.transactions, categories: s.categories, currency: s.settings.currency, aiSummary: s.aiSummary,
+  }));
   const setAiSummary = useStore((s) => s.setAiSummary);
 
   const [loading, setLoading] = useState(false);

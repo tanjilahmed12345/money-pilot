@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useStore } from "@/store";
+import { useShallowStore } from "@/hooks/useShallowStore";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
@@ -11,8 +11,11 @@ import { formatCurrency, getDaysInMonth, getFirstDayOfMonth, formatDate } from "
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function CalendarPage() {
-  const { transactions, categories, settings } = useStore();
-  const currency = settings.currency;
+  const { transactions, categories, currency } = useShallowStore((s) => ({
+    transactions: s.transactions,
+    categories: s.categories,
+    currency: s.settings.currency,
+  }));
 
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());

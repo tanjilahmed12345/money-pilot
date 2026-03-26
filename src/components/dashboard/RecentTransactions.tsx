@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useStore } from "@/store";
+import { useShallowStore } from "@/hooks/useShallowStore";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -10,9 +10,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export function RecentTransactions() {
-  const transactions = useStore((s) => s.transactions);
-  const categories = useStore((s) => s.categories);
-  const currency = useStore((s) => s.settings.currency);
+  const { transactions, categories, currency } = useShallowStore((s) => ({
+    transactions: s.transactions, categories: s.categories, currency: s.settings.currency,
+  }));
   const router = useRouter();
 
   const { recent, catMap } = useMemo(() => ({

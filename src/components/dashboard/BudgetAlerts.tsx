@@ -1,15 +1,14 @@
 "use client";
 
 import { useMemo } from "react";
-import { useStore } from "@/store";
+import { useShallowStore } from "@/hooks/useShallowStore";
 import { formatCurrency, getCurrentMonth, getThisMonthTransactions } from "@/utils";
 import Link from "next/link";
 
 export function BudgetAlerts() {
-  const transactions = useStore((s) => s.transactions);
-  const budgets = useStore((s) => s.budgets);
-  const categories = useStore((s) => s.categories);
-  const currency = useStore((s) => s.settings.currency);
+  const { transactions, budgets, categories, currency } = useShallowStore((s) => ({
+    transactions: s.transactions, budgets: s.budgets, categories: s.categories, currency: s.settings.currency,
+  }));
 
   const alerts = useMemo(() => {
     const currentMonth = getCurrentMonth();

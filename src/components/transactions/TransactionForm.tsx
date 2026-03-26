@@ -33,7 +33,12 @@ const TYPE_CONFIG: { value: TransactionType; label: string; activeClass: string 
 ];
 
 export function TransactionForm({ editTransaction, onClose }: TransactionFormProps) {
-  const { addTransaction, updateTransaction, addRecurring, categories, merchantMap, setMerchantCategory } = useStore();
+  const categories = useStore((s) => s.categories);
+  const merchantMap = useStore((s) => s.merchantMap);
+  const addTransaction = useStore((s) => s.addTransaction);
+  const updateTransaction = useStore((s) => s.updateTransaction);
+  const addRecurring = useStore((s) => s.addRecurring);
+  const setMerchantCategory = useStore((s) => s.setMerchantCategory);
   const { toast } = useToast();
 
   const [title, setTitle] = useState("");

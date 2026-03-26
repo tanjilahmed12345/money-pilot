@@ -1,14 +1,14 @@
 "use client";
 
 import { useMemo } from "react";
-import { useStore } from "@/store";
+import { useShallowStore } from "@/hooks/useShallowStore";
 import { Card } from "@/components/ui/Card";
 import { formatCurrency, getTopCategories, getThisMonthTransactions, getTotalExpense } from "@/utils";
 
 export function TopSpending() {
-  const transactions = useStore((s) => s.transactions);
-  const categories = useStore((s) => s.categories);
-  const currency = useStore((s) => s.settings.currency);
+  const { transactions, categories, currency } = useShallowStore((s) => ({
+    transactions: s.transactions, categories: s.categories, currency: s.settings.currency,
+  }));
 
   const { top, totalMonthExpense, catMap } = useMemo(() => {
     const monthTx = getThisMonthTransactions(transactions);

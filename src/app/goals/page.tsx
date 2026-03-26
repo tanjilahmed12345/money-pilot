@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useStore } from "@/store";
+import { useShallowStore } from "@/hooks/useShallowStore";
 import { SavingsGoal } from "@/types";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -41,11 +42,17 @@ function getEstimatedCompletion(remaining: number, monthlySavingsRate: number): 
 }
 
 export default function GoalsPage() {
-  const {
-    savingsGoals, addSavingsGoal, updateSavingsGoal, deleteSavingsGoal,
-    addToSavings, withdrawFromSavings, settings, categories, transactions,
-  } = useStore();
-  const currency = settings.currency;
+  const { savingsGoals, categories, transactions, currency } = useShallowStore((s) => ({
+    savingsGoals: s.savingsGoals,
+    categories: s.categories,
+    transactions: s.transactions,
+    currency: s.settings.currency,
+  }));
+  const addSavingsGoal = useStore((s) => s.addSavingsGoal);
+  const updateSavingsGoal = useStore((s) => s.updateSavingsGoal);
+  const deleteSavingsGoal = useStore((s) => s.deleteSavingsGoal);
+  const addToSavings = useStore((s) => s.addToSavings);
+  const withdrawFromSavings = useStore((s) => s.withdrawFromSavings);
   const { toast } = useToast();
 
   const [modalOpen, setModalOpen] = useState(false);

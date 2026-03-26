@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useStore } from "@/store";
+import { useShallowStore } from "@/hooks/useShallowStore";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -27,7 +28,14 @@ function getStatusLabel(pct: number) {
 }
 
 export default function BudgetPage() {
-  const { budgets, setBudget, deleteBudget, categories, transactions, settings } = useStore();
+  const { budgets, categories, transactions, currency } = useShallowStore((s) => ({
+    budgets: s.budgets,
+    categories: s.categories,
+    transactions: s.transactions,
+    currency: s.settings.currency,
+  }));
+  const setBudget = useStore((s) => s.setBudget);
+  const deleteBudget = useStore((s) => s.deleteBudget);
   const { toast } = useToast();
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("overall");
@@ -36,7 +44,6 @@ export default function BudgetPage() {
 
   const currentMonth = getCurrentMonth();
   const monthTransactions = getThisMonthTransactions(transactions);
-  const currency = settings.currency;
 
   const monthBudgets = budgets.filter((b) => b.month === currentMonth);
   const catMap = Object.fromEntries(categories.map((c) => [c.id, c]));
