@@ -23,19 +23,19 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-bold text-[var(--foreground)]">Dashboard</h1>
         <p className="text-sm text-[var(--muted-foreground)] mt-1">Your financial overview</p>
       </div>
-      <BudgetAlerts />
-      <SpendingAnomalyAlerts />
-      <StatCards />
-      <StatsBar />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div id="budget-alerts"><BudgetAlerts /></div>
+      <div id="spending-anomalies"><SpendingAnomalyAlerts /></div>
+      <div id="stat-cards"><StatCards /></div>
+      <div id="stats-bar"><StatsBar /></div>
+      <div id="recent-transactions" className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <RecentTransactions />
         <div className="space-y-6">
-          <MonthlyComparison />
-          <TopSpending />
+          <div id="month-comparison"><MonthlyComparison /></div>
+          <div id="top-spending"><TopSpending /></div>
         </div>
       </div>
-      <AiSpendingSummary />
-      <SpendingBreakdown />
+      <div id="ai-insight"><AiSpendingSummary /></div>
+      <div id="spending-breakdown"><SpendingBreakdown /></div>
     </div>
   );
 }

@@ -142,20 +142,20 @@ export default function NetWorthPage() {
 
       {/* Summary */}
       {hasData && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Card>
+        <div id="networth-summary" className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Card id="total-assets">
             <CardTitle>Total Assets</CardTitle>
             <CardValue className="mt-2">
               <span className="text-[var(--success)] tabular-nums">{formatCurrency(totalAssets, currency)}</span>
             </CardValue>
           </Card>
-          <Card>
+          <Card id="total-liabilities">
             <CardTitle>Total Liabilities</CardTitle>
             <CardValue className="mt-2">
               <span className="text-[var(--destructive)] tabular-nums">{formatCurrency(totalLiabilities, currency)}</span>
             </CardValue>
           </Card>
-          <Card>
+          <Card id="net-worth-value">
             <CardTitle>Net Worth</CardTitle>
             <CardValue className="mt-2">
               <span style={{ color: netWorth >= 0 ? "var(--success)" : "var(--destructive)" }} className="tabular-nums">
@@ -169,7 +169,7 @@ export default function NetWorthPage() {
 
       {/* Chart */}
       {netWorthSnapshots.length > 1 && (
-        <Card>
+        <Card id="networth-chart">
           <h2 className="text-lg font-semibold text-[var(--card-foreground)] mb-4">Net Worth Over Time</h2>
           <NetWorthChart />
         </Card>
@@ -185,7 +185,7 @@ export default function NetWorthPage() {
       )}
 
       {/* Assets */}
-      <div>
+      <div id="assets-section">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-[var(--foreground)]">Assets</h2>
           <Button size="sm" onClick={openAddAsset}>+ Add Asset</Button>
@@ -227,7 +227,7 @@ export default function NetWorthPage() {
       </div>
 
       {/* Liabilities */}
-      <div>
+      <div id="liabilities-section">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-[var(--foreground)]">Liabilities</h2>
           <Button size="sm" variant="secondary" onClick={openAddLiability}>+ Add Liability</Button>

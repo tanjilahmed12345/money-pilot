@@ -4,108 +4,105 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/store";
 
-// Searchable index: every user-visible section mapped to its page
+// Searchable index: every user-visible section mapped to its page + anchor
 const SEARCH_INDEX = [
   // Dashboard
-  { label: "Budget Alerts", page: "Dashboard", href: "/dashboard" },
-  { label: "Spending Anomaly Alerts", page: "Dashboard", href: "/dashboard" },
-  { label: "Total Balance", page: "Dashboard", href: "/dashboard" },
-  { label: "Monthly Income", page: "Dashboard", href: "/dashboard" },
-  { label: "Monthly Expenses", page: "Dashboard", href: "/dashboard" },
-  { label: "Savings Rate", page: "Dashboard", href: "/dashboard" },
-  { label: "Total Transactions", page: "Dashboard", href: "/dashboard" },
-  { label: "Avg. Daily Spend", page: "Dashboard", href: "/dashboard" },
-  { label: "Projected Monthly", page: "Dashboard", href: "/dashboard" },
-  { label: "Highest Expense", page: "Dashboard", href: "/dashboard" },
-  { label: "Recent Transactions", page: "Dashboard", href: "/dashboard" },
-  { label: "Month vs Last Month", page: "Dashboard", href: "/dashboard" },
-  { label: "Top Spending", page: "Dashboard", href: "/dashboard" },
-  { label: "AI Spending Insight", page: "Dashboard", href: "/dashboard" },
-  { label: "Spending Breakdown", page: "Dashboard", href: "/dashboard" },
+  { label: "Budget Alerts", page: "Dashboard", href: "/dashboard#budget-alerts" },
+  { label: "Spending Anomaly Alerts", page: "Dashboard", href: "/dashboard#spending-anomalies" },
+  { label: "Total Balance", page: "Dashboard", href: "/dashboard#stat-cards" },
+  { label: "Monthly Income", page: "Dashboard", href: "/dashboard#stat-cards" },
+  { label: "Monthly Expenses", page: "Dashboard", href: "/dashboard#stat-cards" },
+  { label: "Savings Rate", page: "Dashboard", href: "/dashboard#stat-cards" },
+  { label: "Total Transactions", page: "Dashboard", href: "/dashboard#stats-bar" },
+  { label: "Avg. Daily Spend", page: "Dashboard", href: "/dashboard#stats-bar" },
+  { label: "Projected Monthly", page: "Dashboard", href: "/dashboard#stats-bar" },
+  { label: "Highest Expense", page: "Dashboard", href: "/dashboard#stats-bar" },
+  { label: "Recent Transactions", page: "Dashboard", href: "/dashboard#recent-transactions" },
+  { label: "Month vs Last Month", page: "Dashboard", href: "/dashboard#month-comparison" },
+  { label: "Top Spending", page: "Dashboard", href: "/dashboard#top-spending" },
+  { label: "AI Spending Insight", page: "Dashboard", href: "/dashboard#ai-insight" },
+  { label: "Spending Breakdown", page: "Dashboard", href: "/dashboard#spending-breakdown" },
 
   // Transactions
   { label: "Transactions", page: "Transactions", href: "/transactions" },
-  { label: "Transaction Filters", page: "Transactions", href: "/transactions" },
-  { label: "Add Transaction", page: "Transactions", href: "/transactions" },
-  { label: "Edit Transaction", page: "Transactions", href: "/transactions" },
+  { label: "Transaction Filters", page: "Transactions", href: "/transactions#transaction-filters" },
+  { label: "Transaction List", page: "Transactions", href: "/transactions#transaction-list" },
 
   // Analytics
   { label: "Analytics Overview", page: "Analytics", href: "/analytics" },
-  { label: "Spending Anomalies", page: "Analytics", href: "/analytics" },
-  { label: "Category-wise Expenses", page: "Analytics", href: "/analytics" },
-  { label: "Monthly Overview", page: "Analytics", href: "/analytics" },
-  { label: "Spending Trend", page: "Analytics", href: "/analytics" },
-  { label: "Category Spending Trends", page: "Analytics", href: "/analytics" },
-  { label: "Categories Above Average", page: "Analytics", href: "/analytics" },
+  { label: "Spending Anomalies", page: "Analytics", href: "/analytics#spending-anomalies" },
+  { label: "Category-wise Expenses", page: "Analytics", href: "/analytics#category-expenses" },
+  { label: "Monthly Overview", page: "Analytics", href: "/analytics#monthly-overview" },
+  { label: "Spending Trend", page: "Analytics", href: "/analytics#spending-trend" },
+  { label: "Category Spending Trends", page: "Analytics", href: "/analytics#category-trends" },
+  { label: "Categories Above Average", page: "Analytics", href: "/analytics#categories-above-avg" },
 
   // Budget
   { label: "Budget", page: "Budget", href: "/budget" },
-  { label: "Total Budget", page: "Budget", href: "/budget" },
-  { label: "Total Spent", page: "Budget", href: "/budget" },
+  { label: "Total Budget", page: "Budget", href: "/budget#total-budget" },
+  { label: "Total Spent", page: "Budget", href: "/budget#total-spent" },
+  { label: "Budget Items", page: "Budget", href: "/budget#budget-items" },
   { label: "Set Budget", page: "Budget", href: "/budget" },
   { label: "Copy Last Month Budget", page: "Budget", href: "/budget" },
 
   // Recurring
   { label: "Recurring Transactions", page: "Recurring", href: "/recurring" },
-  { label: "Est. Monthly Cost", page: "Recurring", href: "/recurring" },
-  { label: "Add Recurring Template", page: "Recurring", href: "/recurring" },
+  { label: "Active Recurring", page: "Recurring", href: "/recurring#active-recurring" },
+  { label: "Est. Monthly Cost", page: "Recurring", href: "/recurring#monthly-cost" },
+  { label: "Paused Recurring", page: "Recurring", href: "/recurring#paused-recurring" },
+  { label: "Recurring Items", page: "Recurring", href: "/recurring#recurring-items" },
 
   // Goals
   { label: "Savings Goals", page: "Goals", href: "/goals" },
-  { label: "Total Saved", page: "Goals", href: "/goals" },
-  { label: "Total Target", page: "Goals", href: "/goals" },
-  { label: "Overall Progress", page: "Goals", href: "/goals" },
-  { label: "Avg Monthly Savings", page: "Goals", href: "/goals" },
-  { label: "Add Funds", page: "Goals", href: "/goals" },
-  { label: "Withdraw Funds", page: "Goals", href: "/goals" },
-  { label: "New Savings Goal", page: "Goals", href: "/goals" },
+  { label: "Total Saved", page: "Goals", href: "/goals#total-saved" },
+  { label: "Total Target", page: "Goals", href: "/goals#total-target" },
+  { label: "Overall Progress", page: "Goals", href: "/goals#overall-progress" },
+  { label: "Avg Monthly Savings", page: "Goals", href: "/goals#avg-savings" },
+  { label: "Goals List", page: "Goals", href: "/goals#goals-list" },
 
   // Net Worth
   { label: "Net Worth", page: "Net Worth", href: "/net-worth" },
-  { label: "Total Assets", page: "Net Worth", href: "/net-worth" },
-  { label: "Total Liabilities", page: "Net Worth", href: "/net-worth" },
-  { label: "Net Worth Over Time", page: "Net Worth", href: "/net-worth" },
-  { label: "Assets", page: "Net Worth", href: "/net-worth" },
-  { label: "Liabilities", page: "Net Worth", href: "/net-worth" },
-  { label: "Add Asset", page: "Net Worth", href: "/net-worth" },
-  { label: "Add Liability", page: "Net Worth", href: "/net-worth" },
+  { label: "Total Assets", page: "Net Worth", href: "/net-worth#total-assets" },
+  { label: "Total Liabilities", page: "Net Worth", href: "/net-worth#total-liabilities" },
+  { label: "Net Worth Value", page: "Net Worth", href: "/net-worth#net-worth-value" },
+  { label: "Net Worth Over Time", page: "Net Worth", href: "/net-worth#networth-chart" },
+  { label: "Assets", page: "Net Worth", href: "/net-worth#assets-section" },
+  { label: "Liabilities", page: "Net Worth", href: "/net-worth#liabilities-section" },
 
   // Calendar
   { label: "Calendar", page: "Calendar", href: "/calendar" },
-  { label: "Daily Expense Calendar", page: "Calendar", href: "/calendar" },
+  { label: "Daily Expense Calendar", page: "Calendar", href: "/calendar#calendar-view" },
 
   // Reports
   { label: "Reports", page: "Reports", href: "/reports" },
-  { label: "Total Income", page: "Reports", href: "/reports" },
-  { label: "Total Expenses", page: "Reports", href: "/reports" },
-  { label: "Savings Rate", page: "Reports", href: "/reports" },
-  { label: "Top Spending Categories", page: "Reports", href: "/reports" },
-  { label: "Biggest Single Expense", page: "Reports", href: "/reports" },
-  { label: "Income vs Expenses", page: "Reports", href: "/reports" },
+  { label: "Total Income", page: "Reports", href: "/reports#total-income" },
+  { label: "Total Expenses", page: "Reports", href: "/reports#total-expenses" },
+  { label: "Savings Rate", page: "Reports", href: "/reports#key-metrics" },
+  { label: "Top Spending Categories", page: "Reports", href: "/reports#top-categories" },
+  { label: "Income vs Expenses", page: "Reports", href: "/reports#income-vs-expenses" },
   { label: "Export PDF", page: "Reports", href: "/reports" },
 
   // Import
   { label: "Import Transactions", page: "Import CSV", href: "/import" },
-  { label: "CSV Upload", page: "Import CSV", href: "/import" },
-  { label: "Duplicate Detection", page: "Import CSV", href: "/import" },
+  { label: "CSV Upload", page: "Import CSV", href: "/import#csv-upload" },
 
   // Settings
   { label: "Settings", page: "Settings", href: "/settings" },
-  { label: "Appearance", page: "Settings", href: "/settings" },
-  { label: "Theme", page: "Settings", href: "/settings" },
-  { label: "Currency", page: "Settings", href: "/settings" },
-  { label: "Categories", page: "Settings", href: "/settings" },
-  { label: "Data Management", page: "Settings", href: "/settings" },
-  { label: "Export JSON", page: "Settings", href: "/settings" },
-  { label: "Export CSV", page: "Settings", href: "/settings" },
-  { label: "Import JSON", page: "Settings", href: "/settings" },
-  { label: "Danger Zone", page: "Settings", href: "/settings" },
-  { label: "Reset All Data", page: "Settings", href: "/settings" },
+  { label: "Appearance", page: "Settings", href: "/settings#appearance" },
+  { label: "Theme", page: "Settings", href: "/settings#appearance" },
+  { label: "Currency", page: "Settings", href: "/settings#appearance" },
+  { label: "Categories", page: "Settings", href: "/settings#categories-section" },
+  { label: "Data Management", page: "Settings", href: "/settings#data-management" },
+  { label: "Export JSON", page: "Settings", href: "/settings#data-management" },
+  { label: "Export CSV", page: "Settings", href: "/settings#data-management" },
+  { label: "Import JSON", page: "Settings", href: "/settings#data-management" },
+  { label: "Danger Zone", page: "Settings", href: "/settings#danger-zone" },
+  { label: "Reset All Data", page: "Settings", href: "/settings#danger-zone" },
 
   // Cross-page items (present on multiple pages)
-  { label: "Savings Rate", page: "Dashboard", href: "/dashboard" },
-  { label: "Monthly Expenses", page: "Reports", href: "/reports" },
-  { label: "Spending Breakdown", page: "Analytics", href: "/analytics" },
+  { label: "Savings Rate", page: "Dashboard", href: "/dashboard#stat-cards" },
+  { label: "Monthly Expenses", page: "Reports", href: "/reports#total-expenses" },
+  { label: "Spending Breakdown", page: "Analytics", href: "/analytics#category-expenses" },
 ];
 
 // Deduplicate: group by label to find items on multiple pages
@@ -198,10 +195,33 @@ export function Header() {
 
   const navigate = useCallback(
     (href: string) => {
-      router.push(href);
+      const [path, hash] = href.split("#");
+      router.push(path);
       setQuery("");
       setOpen(false);
       setActiveIndex(-1);
+
+      if (hash) {
+        // Wait for page to render, then scroll to the element
+        const scrollToHash = () => {
+          const el = document.getElementById(hash);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            // Brief highlight effect
+            el.style.outline = "2px solid var(--primary)";
+            el.style.outlineOffset = "4px";
+            el.style.borderRadius = "12px";
+            el.style.transition = "outline-color 1.5s ease";
+            setTimeout(() => {
+              el.style.outlineColor = "transparent";
+              setTimeout(() => { el.style.outline = ""; el.style.outlineOffset = ""; el.style.borderRadius = ""; el.style.transition = ""; }, 500);
+            }, 1500);
+          }
+        };
+        // Try immediately, retry after delays for page transitions
+        setTimeout(scrollToHash, 100);
+        setTimeout(scrollToHash, 300);
+      }
     },
     [router]
   );

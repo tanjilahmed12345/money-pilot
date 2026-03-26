@@ -111,8 +111,8 @@ export default function TransactionsPage() {
         </Button>
       </div>
 
-      <TransactionFilters filters={filters} onChange={updateFilters} defaultFilters={defaultFilters} />
-      <TransactionList transactions={filtered} onEdit={openEdit} />
+      <div id="transaction-filters"><TransactionFilters filters={filters} onChange={updateFilters} defaultFilters={defaultFilters} /></div>
+      <div id="transaction-list"><TransactionList transactions={filtered} onEdit={openEdit} /></div>
 
       <Drawer
         open={drawerOpen}

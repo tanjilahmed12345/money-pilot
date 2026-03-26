@@ -70,7 +70,7 @@ export default function CalendarPage() {
         <p className="text-sm text-[var(--muted-foreground)] mt-1">Daily expense overview</p>
       </div>
 
-      <Card>
+      <Card id="calendar-view">
         <div className="flex items-center justify-between mb-6">
           <Button variant="ghost" onClick={prev}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

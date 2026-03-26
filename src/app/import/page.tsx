@@ -116,7 +116,7 @@ export default function ImportPage() {
       </div>
 
       {step === "upload" && (
-        <Card>
+        <Card id="csv-upload">
           <div
             className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-[var(--border)] py-16 px-4 text-center transition-colors hover:border-[var(--primary)]/50 cursor-pointer"
             onClick={() => fileRef.current?.click()}
