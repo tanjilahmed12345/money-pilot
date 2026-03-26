@@ -63,6 +63,7 @@ export default function TransactionsPage() {
   const [filters, setFilters] = useState<FilterState>(() => filtersFromParams(searchParams));
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editTx, setEditTx] = useState<Transaction | null>(null);
+  const [formKey, setFormKey] = useState(0);
 
   // Sync URL → state on param changes (e.g. shared link)
   useEffect(() => {
@@ -81,11 +82,13 @@ export default function TransactionsPage() {
 
   const openAdd = () => {
     setEditTx(null);
+    setFormKey((k) => k + 1);
     setDrawerOpen(true);
   };
 
   const openEdit = (t: Transaction) => {
     setEditTx(t);
+    setFormKey((k) => k + 1);
     setDrawerOpen(true);
   };
 
@@ -119,7 +122,7 @@ export default function TransactionsPage() {
         onClose={closeDrawer}
         title={editTx ? "Edit Transaction" : "Add Transaction"}
       >
-        <TransactionForm editTransaction={editTx} onClose={closeDrawer} />
+        <TransactionForm key={formKey} editTransaction={editTx} onClose={closeDrawer} />
       </Drawer>
     </div>
   );
