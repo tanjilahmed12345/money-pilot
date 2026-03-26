@@ -62,6 +62,19 @@ export function TransactionForm({ editTransaction, onClose }: TransactionFormPro
       setNotes(editTransaction.notes);
       setRecurring(false);
       userOverrodeCategory.current = true; // Don't auto-suggest for edits
+    } else {
+      // Reset form for new transaction
+      setTitle("");
+      setAmount("");
+      setType("expense");
+      setCategory("");
+      setDate(new Date().toISOString().split("T")[0]);
+      setNotes("");
+      setRecurring(false);
+      setErrors({});
+      setAutoSuggested(false);
+      setSuggestionSource(null);
+      userOverrodeCategory.current = false;
     }
   }, [editTransaction]);
 
