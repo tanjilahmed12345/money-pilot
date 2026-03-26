@@ -10,7 +10,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { formatCurrency, formatDate } from "@/utils";
 import { useToast } from "@/components/ui/Toast";
 
-const PAGE_SIZE = 15;
+const DEFAULT_PAGE_SIZE = 10;
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -26,17 +27,18 @@ export function TransactionList({ transactions, onEdit }: TransactionListProps) 
   const addTransaction = useStore((s) => s.addTransaction);
   const { toast } = useToast();
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   const catMap = useMemo(
     () => Object.fromEntries(categories.map((c) => [c.id, c])),
     [categories]
   );
 
-  const totalPages = Math.max(1, Math.ceil(transactions.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(transactions.length / pageSize));
   const safePageIndex = Math.min(page, totalPages - 1);
   const paginated = useMemo(
-    () => transactions.slice(safePageIndex * PAGE_SIZE, (safePageIndex + 1) * PAGE_SIZE),
-    [transactions, safePageIndex]
+    () => transactions.slice(safePageIndex * pageSize, (safePageIndex + 1) * pageSize),
+    [transactions, safePageIndex, pageSize]
   );
 
   // Reset to page 0 when transactions change (e.g. filter change)
@@ -70,8 +72,8 @@ export function TransactionList({ transactions, onEdit }: TransactionListProps) 
     return <EmptyState title="No transactions found" description="Try adjusting your filters or add a new transaction" />;
   }
 
-  const start = safePageIndex * PAGE_SIZE + 1;
-  const end = Math.min((safePageIndex + 1) * PAGE_SIZE, transactions.length);
+  const start = safePageIndex * pageSize + 1;
+  const end = Math.min((safePageIndex + 1) * pageSize, transactions.length);
 
   return (
     <div className="space-y-3">
@@ -140,11 +142,27 @@ export function TransactionList({ transactions, onEdit }: TransactionListProps) 
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+        <div className="flex items-center gap-2">
           <p className="text-xs text-[var(--muted-foreground)]">
             {start}–{end} of {transactions.length}
           </p>
+          <span className="text-xs text-[var(--muted-foreground)]">·</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-[var(--muted-foreground)]">Show</span>
+            <select
+              value={pageSize}
+              onChange={(e) => { setPageSize(Number(e.target.value)); setPage(0); }}
+              className="rounded-md border border-[var(--border)] bg-[var(--card)] px-2 py-1 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
+            >
+              {PAGE_SIZE_OPTIONS.map((size) => (
+                <option key={size} value={size}>{size}</option>
+              ))}
+            </select>
+            <span className="text-xs text-[var(--muted-foreground)]">per page</span>
+          </div>
+        </div>
+        {totalPages > 1 && (
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
@@ -156,19 +174,38 @@ export function TransactionList({ transactions, onEdit }: TransactionListProps) 
                 <path d="M15 18l-6-6 6-6" />
               </svg>
             </Button>
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i}
-                onClick={() => setPage(i)}
-                className={`h-8 w-8 rounded-lg text-xs font-medium transition-colors ${
-                  i === safePageIndex
-                    ? "bg-[var(--primary)] text-white"
-                    : "text-[var(--muted-foreground)] hover:bg-[var(--accent)]"
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
+            {(() => {
+              // Show limited page buttons with ellipsis for many pages
+              const pages: (number | "...")[] = [];
+              if (totalPages <= 7) {
+                for (let i = 0; i < totalPages; i++) pages.push(i);
+              } else {
+                pages.push(0);
+                if (safePageIndex > 2) pages.push("...");
+                for (let i = Math.max(1, safePageIndex - 1); i <= Math.min(totalPages - 2, safePageIndex + 1); i++) {
+                  pages.push(i);
+                }
+                if (safePageIndex < totalPages - 3) pages.push("...");
+                pages.push(totalPages - 1);
+              }
+              return pages.map((p, idx) =>
+                p === "..." ? (
+                  <span key={`ellipsis-${idx}`} className="px-1 text-xs text-[var(--muted-foreground)]">...</span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={`h-8 w-8 rounded-lg text-xs font-medium transition-colors ${
+                      p === safePageIndex
+                        ? "bg-[var(--primary)] text-white"
+                        : "text-[var(--muted-foreground)] hover:bg-[var(--accent)]"
+                    }`}
+                  >
+                    {p + 1}
+                  </button>
+                )
+              );
+            })()}
             <Button
               variant="ghost"
               size="sm"
@@ -180,8 +217,8 @@ export function TransactionList({ transactions, onEdit }: TransactionListProps) 
               </svg>
             </Button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
