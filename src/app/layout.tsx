@@ -5,6 +5,9 @@ import { AppShell } from "@/components/shared/AppShell";
 export const metadata: Metadata = {
   title: "MoneyPilot - Personal Finance Dashboard",
   description: "Track your income, expenses, and budgets with MoneyPilot",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 // Detect system preference before React hydration to prevent FOUC.
