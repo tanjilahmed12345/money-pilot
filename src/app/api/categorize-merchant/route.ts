@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 
 interface RequestBody {
   merchant: string;
@@ -7,9 +6,9 @@ interface RequestBody {
 }
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    return NextResponse.json({ error: "ANTHROPIC_API_KEY not configured" }, { status: 500 });
+    return NextResponse.json({ error: "GROQ_API_KEY not configured" }, { status: 500 });
   }
 
   try {
@@ -21,17 +20,29 @@ export async function POST(req: NextRequest) {
 
     const categoryList = categories.map((c) => `- ${c.id}: ${c.name}`).join("\n");
 
-    const client = new Anthropic({ apiKey });
-    const message = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 50,
-      messages: [{
-        role: "user",
-        content: `What spending category does the merchant "${merchant}" belong to? Reply with ONLY the category ID from this list, nothing else:\n\n${categoryList}`,
-      }],
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: [{
+          role: "user",
+          content: `What spending category does the merchant "${merchant}" belong to? Reply with ONLY the category ID from this list, nothing else:\n\n${categoryList}`,
+        }],
+        max_tokens: 50,
+      }),
     });
 
-    const text = (message.content[0].type === "text" ? message.content[0].text : "").trim();
+    if (!res.ok) {
+      console.error("Groq API error:", await res.text());
+      return NextResponse.json({ categoryId: null });
+    }
+
+    const data = await res.json();
+    const text = (data.choices?.[0]?.message?.content || "").trim();
     const matched = categories.find((c) => text.includes(c.id));
 
     return NextResponse.json({ categoryId: matched?.id || null });

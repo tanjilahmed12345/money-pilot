@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 
 interface TransactionSummary {
   category: string;
@@ -17,10 +16,10 @@ interface RequestBody {
 }
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY not configured. Add it to your .env.local file." },
+      { error: "GROQ_API_KEY not configured. Add it to your .env file." },
       { status: 500 }
     );
   }
@@ -50,14 +49,27 @@ Instructions:
 3. Give one specific, actionable tip to save money
 Keep it concise, warm, and encouraging. Use the currency symbol ${currency} for all amounts. Do not use markdown formatting.`;
 
-    const client = new Anthropic({ apiKey });
-    const message = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 300,
-      messages: [{ role: "user", content: prompt }],
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 300,
+      }),
     });
 
-    const text = message.content[0].type === "text" ? message.content[0].text : "";
+    if (!res.ok) {
+      const err = await res.text();
+      console.error("Groq API error:", err);
+      return NextResponse.json({ error: "AI service error" }, { status: 502 });
+    }
+
+    const data = await res.json();
+    const text = data.choices?.[0]?.message?.content || "";
 
     return NextResponse.json({ summary: text });
   } catch (err) {
