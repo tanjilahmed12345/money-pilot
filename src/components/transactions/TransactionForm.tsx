@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useStore } from "@/store";
-import { Transaction, TransactionType } from "@/types";
+import { Transaction, TransactionType, Category } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -205,11 +205,6 @@ export function TransactionForm({ editTransaction, onClose }: TransactionFormPro
     onClose();
   };
 
-  const categoryOptions = [
-    { value: "", label: "Select category" },
-    ...categories.map((c) => ({ value: c.id, label: `${c.icon} ${c.name}` })),
-  ];
-
   const selectedCat = categories.find((c) => c.id === category);
 
   return (
@@ -282,15 +277,13 @@ export function TransactionForm({ editTransaction, onClose }: TransactionFormPro
         )}
       </div>
 
-      {/* Category */}
-      <Select
-        label="Category"
-        id="category"
+      {/* Category with inline create */}
+      <CategoryPicker
+        categories={categories}
         value={category}
-        onChange={(e) => handleCategoryChange(e.target.value)}
-        options={categoryOptions}
+        onChange={handleCategoryChange}
+        error={errors.category}
       />
-      {errors.category && <p className="text-xs text-[var(--destructive)] -mt-3">{errors.category}</p>}
 
       {/* Date */}
       <Input
@@ -463,5 +456,176 @@ export function TransactionForm({ editTransaction, onClose }: TransactionFormPro
         </Button>
       </div>
     </form>
+  );
+}
+
+// ─── Inline Category Picker with "Create New" ─────────────────
+
+const DEFAULT_ICON = "📁";
+const PRESET_COLORS = [
+  "#f97316", "#ef4444", "#ec4899", "#a855f7", "#6366f1",
+  "#3b82f6", "#06b6d4", "#14b8a6", "#22c55e", "#84cc16",
+  "#eab308", "#6b7280",
+];
+
+function CategoryPicker({
+  categories,
+  value,
+  onChange,
+  error,
+}: {
+  categories: Category[];
+  value: string;
+  onChange: (id: string) => void;
+  error?: string;
+}) {
+  const addCategory = useStore((s) => s.addCategory);
+  const { toast } = useToast();
+
+  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newIcon, setNewIcon] = useState("");
+  const [newColor, setNewColor] = useState(PRESET_COLORS[0]);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (creating) nameInputRef.current?.focus();
+  }, [creating]);
+
+  const handleCreate = () => {
+    const name = newName.trim();
+    if (!name) return;
+
+    const cat: Omit<Category, "id"> = {
+      name,
+      icon: newIcon.trim() || DEFAULT_ICON,
+      color: newColor,
+    };
+
+    addCategory(cat);
+
+    // Find the newly created category (last one added)
+    // We need a slight delay for the store to update
+    setTimeout(() => {
+      const latest = useStore.getState().categories;
+      const created = latest.find(
+        (c) => c.name === name && c.color === newColor
+      );
+      if (created) onChange(created.id);
+    }, 50);
+
+    toast(`Category "${name}" created`);
+    setCreating(false);
+    setNewName("");
+    setNewIcon("");
+    setNewColor(PRESET_COLORS[0]);
+  };
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-sm font-medium text-[var(--foreground)]">Category</label>
+
+      {!creating ? (
+        <>
+          {/* Dropdown + Create button */}
+          <div className="flex gap-2">
+            <select
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              className="flex-1 rounded-lg border border-[var(--input)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 transition-colors"
+            >
+              <option value="">Select category</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.icon} {c.name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => setCreating(true)}
+              className="shrink-0 flex items-center gap-1.5 rounded-lg border border-dashed border-[var(--primary)]/40 bg-[var(--primary)]/5 px-3 py-2 text-xs font-medium text-[var(--primary)] hover:bg-[var(--primary)]/10 transition-colors"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              New
+            </button>
+          </div>
+          {error && <p className="text-xs text-[var(--destructive)]">{error}</p>}
+        </>
+      ) : (
+        /* Inline create form */
+        <div className="rounded-lg border border-[var(--primary)]/30 bg-[var(--primary)]/5 p-3 space-y-3 animate-[fadeIn_0.15s_ease-out]">
+          <div className="flex gap-2">
+            {/* Icon input */}
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] font-medium text-[var(--muted-foreground)]">Icon</label>
+              <input
+                type="text"
+                value={newIcon}
+                onChange={(e) => setNewIcon(e.target.value)}
+                placeholder={DEFAULT_ICON}
+                maxLength={2}
+                className="w-12 h-9 rounded-lg border border-[var(--input)] bg-[var(--background)] text-center text-lg focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 transition-colors"
+              />
+            </div>
+            {/* Name input */}
+            <div className="flex-1 flex flex-col gap-1">
+              <label className="text-[11px] font-medium text-[var(--muted-foreground)]">Name</label>
+              <input
+                ref={nameInputRef}
+                type="text"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleCreate(); } }}
+                placeholder="e.g., Groceries"
+                className="h-9 rounded-lg border border-[var(--input)] bg-[var(--background)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* Color picker */}
+          <div className="flex flex-col gap-1">
+            <label className="text-[11px] font-medium text-[var(--muted-foreground)]">Color</label>
+            <div className="flex flex-wrap gap-1.5">
+              {PRESET_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setNewColor(c)}
+                  className="w-6 h-6 rounded-full transition-all"
+                  style={{
+                    backgroundColor: c,
+                    outline: newColor === c ? `2px solid ${c}` : "none",
+                    outlineOffset: newColor === c ? "2px" : "0",
+                    transform: newColor === c ? "scale(1.15)" : "scale(1)",
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => { setCreating(false); setNewName(""); setNewIcon(""); }}
+              className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-xs font-medium text-[var(--muted-foreground)] hover:bg-[var(--accent)] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleCreate}
+              disabled={!newName.trim()}
+              className="flex-1 rounded-lg bg-[var(--primary)] px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              Create & Select
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
