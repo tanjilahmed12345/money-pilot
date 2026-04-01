@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { ClientLayout } from "@/components/shared/ClientLayout";
+import { AppShell } from "@/components/shared/AppShell";
 
 export const metadata: Metadata = {
   title: "MoneyPilot - Personal Finance Dashboard",
@@ -31,7 +31,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="antialiased">
-        <ClientLayout>{children}</ClientLayout>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );
