@@ -3,15 +3,12 @@
 import { ThemeProvider } from "./ThemeProvider";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
-import { useHydration } from "@/hooks/useHydration";
 import { useDbHydration } from "@/hooks/useDbHydration";
 import { DashboardSkeleton } from "@/components/ui/Skeleton";
 import { ToastProvider } from "@/components/ui/Toast";
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
-  const hydrated = useHydration();
-  // Fetch data from the database after localStorage hydration
-  useDbHydration();
+  const hydrated = useDbHydration();
 
   if (!hydrated) {
     return (

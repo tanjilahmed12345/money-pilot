@@ -1,25 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth-api";
 
-// GET /api/budgets — list all budgets
+// GET /api/budgets
 export async function GET() {
-  const budgets = await prisma.budget.findMany();
+  const [session, err] = await requireAuth();
+  if (err) return err;
+
+  const budgets = await prisma.budget.findMany({ where: { userId: session.userId } });
   return NextResponse.json(budgets);
 }
 
-// POST /api/budgets — create or update a budget (upsert by category+month)
+// POST /api/budgets — upsert by user+category+month
 export async function POST(req: NextRequest) {
+  const [session, err] = await requireAuth();
+  if (err) return err;
+
   const { category, amount, month } = await req.json();
   const budget = await prisma.budget.upsert({
-    where: { category_month: { category, month } },
+    where: { userId_category_month: { userId: session.userId, category, month } },
     update: { amount },
-    create: { category, amount, month },
+    create: { userId: session.userId, category, amount, month },
   });
   return NextResponse.json(budget, { status: 201 });
 }
 
-// DELETE /api/budgets — clear all budgets
+// DELETE /api/budgets — clear all for this user
 export async function DELETE() {
-  await prisma.budget.deleteMany();
+  const [session, err] = await requireAuth();
+  if (err) return err;
+
+  await prisma.budget.deleteMany({ where: { userId: session.userId } });
   return NextResponse.json({ success: true });
 }

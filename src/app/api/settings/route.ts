@@ -1,24 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth-api";
 
-// GET /api/settings — get current settings
+// GET /api/settings
 export async function GET() {
-  let settings = await prisma.settings.findUnique({ where: { id: "default" } });
+  const [session, err] = await requireAuth();
+  if (err) return err;
+
+  let settings = await prisma.settings.findUnique({
+    where: { userId: session.userId },
+  });
   if (!settings) {
     settings = await prisma.settings.create({
-      data: { id: "default", theme: "system", currency: "৳" },
+      data: { userId: session.userId, theme: "system", currency: "৳" },
     });
   }
   return NextResponse.json(settings);
 }
 
-// PATCH /api/settings — update settings
+// PATCH /api/settings
 export async function PATCH(req: NextRequest) {
+  const [session, err] = await requireAuth();
+  if (err) return err;
+
   const body = await req.json();
   const settings = await prisma.settings.upsert({
-    where: { id: "default" },
+    where: { userId: session.userId },
     update: body,
-    create: { id: "default", ...body },
+    create: { userId: session.userId, ...body },
   });
   return NextResponse.json(settings);
 }

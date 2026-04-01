@@ -1,9 +1,11 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET || "fallback-secret-change-me"
-);
+const jwtSecret = process.env.JWT_SECRET;
+if (!jwtSecret) {
+  throw new Error("JWT_SECRET environment variable is not set");
+}
+const secret = new TextEncoder().encode(jwtSecret);
 
 const TOKEN_NAME = "mp-auth-token";
 const EXPIRY = "7d";

@@ -37,6 +37,7 @@ enum TransactionType {
 
 model Transaction {
   id       String          @id @default(uuid())
+  userId   String
   title    String
   amount   Float
   type     TransactionType
@@ -47,6 +48,7 @@ model Transaction {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([userId])
   @@index([date])
   @@index([category])
   @@index([type])
@@ -55,19 +57,23 @@ model Transaction {
 // ─── Categories ────────────────────────────────────────────
 
 model Category {
-  id    String @id @default(uuid())
-  name  String
-  color String
-  icon  String
+  id     String @id @default(uuid())
+  userId String
+  name   String
+  color  String
+  icon   String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 // ─── Budgets ───────────────────────────────────────────────
 
 model Budget {
   id       String @id @default(uuid())
+  userId   String
   category String // category id or "overall"
   amount   Float
   month    String // YYYY-MM
@@ -75,7 +81,8 @@ model Budget {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([category, month])
+  @@unique([userId, category, month])
+  @@index([userId])
 }
 
 // ─── Recurring Transactions ────────────────────────────────
@@ -96,6 +103,7 @@ enum RecurringTag {
 
 model RecurringTransaction {
   id          String          @id @default(uuid())
+  userId      String
   title       String
   amount      Float
   type        TransactionType
@@ -109,12 +117,15 @@ model RecurringTransaction {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 // ─── Savings Goals ─────────────────────────────────────────
 
 model SavingsGoal {
   id           String  @id @default(uuid())
+  userId       String
   name         String
   targetAmount Float
   savedAmount  Float   @default(0)
@@ -125,6 +136,8 @@ model SavingsGoal {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 // ─── Net Worth ─────────────────────────────────────────────
@@ -146,6 +159,7 @@ enum LiabilityType {
 
 model Asset {
   id     String    @id @default(uuid())
+  userId String
   name   String
   amount Float
   type   AssetType
@@ -153,10 +167,13 @@ model Asset {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Liability {
   id     String        @id @default(uuid())
+  userId String
   name   String
   amount Float
   type   LiabilityType
@@ -164,33 +181,44 @@ model Liability {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model NetWorthSnapshot {
   id          String @id @default(uuid())
-  month       String @unique // YYYY-MM
+  userId      String
+  month       String // YYYY-MM
   assets      Float
   liabilities Float
   netWorth    Float
 
   createdAt DateTime @default(now())
+
+  @@unique([userId, month])
+  @@index([userId])
 }
 
 // ─── Merchant Map ──────────────────────────────────────────
 
 model MerchantMapping {
   id         String @id @default(uuid())
-  merchant   String @unique // lowercase merchant name
+  userId     String
+  merchant   String // lowercase merchant name
   categoryId String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([userId, merchant])
+  @@index([userId])
 }
 
 // ─── Settings ──────────────────────────────────────────────
 
 model Settings {
-  id       String @id @default("default")
+  id       String @id @default(uuid())
+  userId   String @unique
   theme    String @default("system") // light | dark | system
   currency String @default("৳")     // ৳ | $ | €
 
@@ -200,7 +228,8 @@ model Settings {
 // ─── AI Summary Cache ──────────────────────────────────────
 
 model AiSummary {
-  id               String @id @default("default")
+  id               String @id @default(uuid())
+  userId           String @unique
   text             String
   generatedAt      String // ISO date
   transactionCount Int

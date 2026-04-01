@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth-api";
 
-// GET /api/merchant-map — get all merchant mappings as a record
+// GET /api/merchant-map
 export async function GET() {
-  const mappings = await prisma.merchantMapping.findMany();
+  const [session, err] = await requireAuth();
+  if (err) return err;
+
+  const mappings = await prisma.merchantMapping.findMany({
+    where: { userId: session.userId },
+  });
   const map: Record<string, string> = {};
   for (const m of mappings) {
     map[m.merchant] = m.categoryId;
@@ -11,22 +17,30 @@ export async function GET() {
   return NextResponse.json(map);
 }
 
-// POST /api/merchant-map — set a merchant→category mapping
+// POST /api/merchant-map — upsert by user+merchant
 export async function POST(req: NextRequest) {
+  const [session, err] = await requireAuth();
+  if (err) return err;
+
   const { merchant, categoryId } = await req.json();
   const key = merchant.toLowerCase().trim();
   const mapping = await prisma.merchantMapping.upsert({
-    where: { merchant: key },
+    where: { userId_merchant: { userId: session.userId, merchant: key } },
     update: { categoryId },
-    create: { merchant: key, categoryId },
+    create: { userId: session.userId, merchant: key, categoryId },
   });
   return NextResponse.json(mapping, { status: 201 });
 }
 
-// DELETE /api/merchant-map — delete a merchant mapping
+// DELETE /api/merchant-map
 export async function DELETE(req: NextRequest) {
+  const [session, err] = await requireAuth();
+  if (err) return err;
+
   const { merchant } = await req.json();
   const key = merchant.toLowerCase().trim();
-  await prisma.merchantMapping.delete({ where: { merchant: key } });
+  await prisma.merchantMapping.delete({
+    where: { userId_merchant: { userId: session.userId, merchant: key } },
+  });
   return NextResponse.json({ success: true });
 }

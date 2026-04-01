@@ -1,22 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth-api";
 
 type Params = { params: Promise<{ id: string }> };
 
-// PATCH /api/categories/:id — update a category
+// PATCH /api/categories/:id
 export async function PATCH(req: NextRequest, { params }: Params) {
+  const [session, err] = await requireAuth();
+  if (err) return err;
+
   const { id } = await params;
   const body = await req.json();
   const category = await prisma.category.update({
-    where: { id },
+    where: { id, userId: session.userId },
     data: body,
   });
   return NextResponse.json(category);
 }
 
-// DELETE /api/categories/:id — delete a category
+// DELETE /api/categories/:id
 export async function DELETE(_req: NextRequest, { params }: Params) {
+  const [session, err] = await requireAuth();
+  if (err) return err;
+
   const { id } = await params;
-  await prisma.category.delete({ where: { id } });
+  await prisma.category.delete({ where: { id, userId: session.userId } });
   return NextResponse.json({ success: true });
 }

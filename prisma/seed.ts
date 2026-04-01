@@ -15,23 +15,30 @@ const DEFAULT_CATEGORIES = [
 async function main() {
   const prisma = new PrismaClient();
 
-  // Seed default categories
-  for (const cat of DEFAULT_CATEGORIES) {
-    await prisma.category.upsert({
-      where: { id: cat.id },
-      update: cat,
-      create: cat,
-    });
-  }
-  console.log("Seeded default categories");
+  // Seed requires a user — seed default categories for all existing users
+  const users = await prisma.user.findMany();
 
-  // Seed default settings
-  await prisma.settings.upsert({
-    where: { id: "default" },
-    update: {},
-    create: { id: "default", theme: "system", currency: "৳" },
-  });
-  console.log("Seeded default settings");
+  for (const user of users) {
+    for (const cat of DEFAULT_CATEGORIES) {
+      await prisma.category.upsert({
+        where: { id: `${cat.id}-${user.id}` },
+        update: { ...cat, id: `${cat.id}-${user.id}`, userId: user.id },
+        create: { ...cat, id: `${cat.id}-${user.id}`, userId: user.id },
+      });
+    }
+
+    await prisma.settings.upsert({
+      where: { userId: user.id },
+      update: {},
+      create: { userId: user.id, theme: "system", currency: "৳" },
+    });
+
+    console.log(`Seeded defaults for user: ${user.email}`);
+  }
+
+  if (users.length === 0) {
+    console.log("No users found — skipping seed. Register a user first.");
+  }
 }
 
 main().catch((e) => {
