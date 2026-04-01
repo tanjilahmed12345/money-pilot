@@ -51,6 +51,7 @@ export default function LendBorrowPage() {
   const addLendBorrow = useStore((s) => s.addLendBorrow);
   const updateLendBorrow = useStore((s) => s.updateLendBorrow);
   const deleteLendBorrow = useStore((s) => s.deleteLendBorrow);
+  const addTransaction = useStore((s) => s.addTransaction);
   const { toast } = useToast();
 
   // ─── State ───────────────────────────────────────────────
@@ -143,6 +144,15 @@ export default function LendBorrowPage() {
       toast("Transaction updated");
     } else {
       addLendBorrow(data);
+      // Also add to main transactions — lent = expense, borrowed = income
+      addTransaction({
+        title: `${data.type === "lent" ? "Lent to" : "Borrowed from"} ${data.person}`,
+        amount: data.amount,
+        type: data.type === "lent" ? "expense" : "income",
+        category: "cat-others",
+        date: data.date,
+        notes: `${data.method}${data.note ? " · " + data.note : ""} (Lend & Borrow)`,
+      });
       toast("Transaction added");
     }
     setModalOpen(false);
