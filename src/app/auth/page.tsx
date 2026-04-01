@@ -1,12 +1,10 @@
 "use client";
 
 import { useState, useEffect, FormEvent } from "react";
-import { useRouter } from "next/navigation";
 
 type AuthTab = "login" | "register" | "forgot";
 
 export default function AuthPage() {
-  const router = useRouter();
   const [tab, setTab] = useState<AuthTab>("login");
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -53,7 +51,8 @@ export default function AuthPage() {
         return;
       }
 
-      router.push("/dashboard");
+      // Hard redirect ensures the auth cookie is sent with the request
+      window.location.href = "/dashboard";
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -85,7 +84,8 @@ export default function AuthPage() {
         return;
       }
 
-      router.push("/dashboard");
+      // Hard redirect ensures the auth cookie is sent with the request
+      window.location.href = "/dashboard";
     } catch {
       setError("Network error. Please try again.");
     } finally {

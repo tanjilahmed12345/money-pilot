@@ -47,7 +47,7 @@ export const api = {
   // ─── Transactions ─────────────────────────────────────────
   transactions: {
     list: () => request<Transaction[]>("/transactions"),
-    create: (data: Omit<Transaction, "id">) =>
+    create: (data: Transaction) =>
       request<Transaction>("/transactions", {
         method: "POST",
         body: JSON.stringify(data),
@@ -70,7 +70,7 @@ export const api = {
   // ─── Categories ───────────────────────────────────────────
   categories: {
     list: () => request<Category[]>("/categories"),
-    create: (data: Omit<Category, "id">) =>
+    create: (data: Category) =>
       request<Category>("/categories", {
         method: "POST",
         body: JSON.stringify(data),
@@ -102,7 +102,7 @@ export const api = {
   // ─── Recurring Transactions ───────────────────────────────
   recurring: {
     list: () => request<RecurringTransaction[]>("/recurring"),
-    create: (data: Omit<RecurringTransaction, "id">) =>
+    create: (data: RecurringTransaction) =>
       request<RecurringTransaction>("/recurring", {
         method: "POST",
         body: JSON.stringify(data),
@@ -119,7 +119,7 @@ export const api = {
   // ─── Savings Goals ────────────────────────────────────────
   savingsGoals: {
     list: () => request<SavingsGoal[]>("/savings-goals"),
-    create: (data: Omit<SavingsGoal, "id">) =>
+    create: (data: SavingsGoal) =>
       request<SavingsGoal>("/savings-goals", {
         method: "POST",
         body: JSON.stringify(data),
@@ -136,7 +136,7 @@ export const api = {
   // ─── Assets ───────────────────────────────────────────────
   assets: {
     list: () => request<Asset[]>("/assets"),
-    create: (data: Omit<Asset, "id">) =>
+    create: (data: Asset) =>
       request<Asset>("/assets", {
         method: "POST",
         body: JSON.stringify(data),
@@ -153,7 +153,7 @@ export const api = {
   // ─── Liabilities ──────────────────────────────────────────
   liabilities: {
     list: () => request<Liability[]>("/liabilities"),
-    create: (data: Omit<Liability, "id">) =>
+    create: (data: Liability) =>
       request<Liability>("/liabilities", {
         method: "POST",
         body: JSON.stringify(data),

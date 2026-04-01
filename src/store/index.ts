@@ -101,6 +101,7 @@ interface SettingsSlice {
 
 interface HydrationSlice {
   _dbHydrated: boolean;
+  _hydrationError: string | null;
   hydrateFromDb: () => Promise<void>;
 }
 
@@ -121,6 +122,7 @@ export const useStore = create<Store>()(
   (set, get) => ({
     // ─── DB Hydration ───────────────────────────────────────
     _dbHydrated: false,
+    _hydrationError: null,
     hydrateFromDb: async () => {
       try {
         const data = await api.fetchAll();
@@ -137,10 +139,12 @@ export const useStore = create<Store>()(
           settings: data.settings ?? DEFAULT_SETTINGS,
           aiSummary: data.aiSummary,
           _dbHydrated: true,
+          _hydrationError: null,
         });
       } catch (err) {
         console.error("[hydrateFromDb] Failed:", err);
-        set({ _dbHydrated: true });
+        const message = err instanceof Error ? err.message : "Failed to load data";
+        set({ _dbHydrated: true, _hydrationError: message });
       }
     },
 
