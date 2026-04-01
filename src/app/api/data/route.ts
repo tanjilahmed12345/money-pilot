@@ -20,6 +20,7 @@ export async function GET() {
     merchantMappings,
     settings,
     aiSummary,
+    lendBorrowTransactions,
   ] = await Promise.all([
     prisma.transaction.findMany({ where: { userId }, orderBy: { date: "desc" } }),
     prisma.category.findMany({ where: { userId }, orderBy: { createdAt: "asc" } }),
@@ -32,6 +33,7 @@ export async function GET() {
     prisma.merchantMapping.findMany({ where: { userId } }),
     prisma.settings.findUnique({ where: { userId } }),
     prisma.aiSummary.findUnique({ where: { userId } }),
+    prisma.lendBorrowTransaction.findMany({ where: { userId }, orderBy: { date: "desc" } }),
   ]);
 
   const merchantMap: Record<string, string> = {};
@@ -51,5 +53,6 @@ export async function GET() {
     merchantMap,
     settings: settings ?? { theme: "system", currency: "৳" },
     aiSummary,
+    lendBorrowTransactions,
   });
 }

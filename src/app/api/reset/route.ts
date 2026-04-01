@@ -21,6 +21,7 @@ export async function POST() {
     prisma.aiSummary.deleteMany({ where: { userId } }),
     prisma.settings.deleteMany({ where: { userId } }),
     prisma.category.deleteMany({ where: { userId } }),
+    prisma.lendBorrowTransaction.deleteMany({ where: { userId } }),
   ]);
 
   // Re-seed default categories and settings for this user

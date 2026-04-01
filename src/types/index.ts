@@ -85,6 +85,18 @@ export interface NetWorthSnapshot {
   netWorth: number;
 }
 
+export type LendBorrowType = "lent" | "borrowed";
+
+export interface LendBorrowTransaction {
+  id: string;
+  person: string;
+  amount: number;
+  type: LendBorrowType;
+  method: string;
+  date: string;
+  note: string;
+}
+
 export interface FilterState {
   search: string;
   type: TransactionType | "all";

@@ -14,6 +14,7 @@ import {
   Asset,
   Liability,
   NetWorthSnapshot,
+  LendBorrowTransaction,
 } from "@/types";
 import { DEFAULT_CATEGORIES, DEFAULT_SETTINGS } from "@/lib/constants";
 import { api } from "@/lib/api";
@@ -99,6 +100,13 @@ interface SettingsSlice {
   resetSettings: () => void;
 }
 
+interface LendBorrowSlice {
+  lendBorrowTransactions: LendBorrowTransaction[];
+  addLendBorrow: (t: Omit<LendBorrowTransaction, "id">) => void;
+  updateLendBorrow: (id: string, t: Partial<LendBorrowTransaction>) => void;
+  deleteLendBorrow: (id: string) => void;
+}
+
 interface HydrationSlice {
   _dbHydrated: boolean;
   _hydrationError: string | null;
@@ -114,6 +122,7 @@ type Store = TransactionSlice &
   MerchantMapSlice &
   AiSummarySlice &
   SettingsSlice &
+  LendBorrowSlice &
   HydrationSlice & {
     resetAll: () => void;
   };
@@ -138,6 +147,7 @@ export const useStore = create<Store>()(
           merchantMap: data.merchantMap,
           settings: data.settings ?? DEFAULT_SETTINGS,
           aiSummary: data.aiSummary,
+          lendBorrowTransactions: data.lendBorrowTransactions ?? [],
           _dbHydrated: true,
           _hydrationError: null,
         });
@@ -418,6 +428,29 @@ export const useStore = create<Store>()(
       sync(() => api.aiSummary.clear());
     },
 
+    // ─── Lend & Borrow ─────────────────────────────────────
+    lendBorrowTransactions: [],
+    addLendBorrow: (t) => {
+      const id = uuidv4();
+      const item = { ...t, id };
+      set((state) => ({ lendBorrowTransactions: [item, ...state.lendBorrowTransactions] }));
+      sync(() => api.lendBorrow.create(item));
+    },
+    updateLendBorrow: (id, updates) => {
+      set((state) => ({
+        lendBorrowTransactions: state.lendBorrowTransactions.map((t) =>
+          t.id === id ? { ...t, ...updates } : t
+        ),
+      }));
+      sync(() => api.lendBorrow.update(id, updates));
+    },
+    deleteLendBorrow: (id) => {
+      set((state) => ({
+        lendBorrowTransactions: state.lendBorrowTransactions.filter((t) => t.id !== id),
+      }));
+      sync(() => api.lendBorrow.delete(id));
+    },
+
     // ─── Settings ──────────────────────────────────────────
     settings: DEFAULT_SETTINGS,
     setTheme: (theme) => {
@@ -446,6 +479,7 @@ export const useStore = create<Store>()(
         netWorthSnapshots: [],
         merchantMap: {},
         aiSummary: null,
+        lendBorrowTransactions: [],
         settings: DEFAULT_SETTINGS,
       });
       sync(() => api.resetAll());

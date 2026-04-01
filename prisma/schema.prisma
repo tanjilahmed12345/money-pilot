@@ -236,3 +236,27 @@ model AiSummary {
 
   updatedAt DateTime @updatedAt
 }
+
+// ─── Lend & Borrow ────────────────────────────────────────
+
+enum LendBorrowType {
+  lent
+  borrowed
+}
+
+model LendBorrowTransaction {
+  id     String         @id @default(uuid())
+  userId String
+  person String
+  amount Float
+  type   LendBorrowType
+  method String         @default("cash")
+  date   String         // YYYY-MM-DD
+  note   String         @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([person])
+}

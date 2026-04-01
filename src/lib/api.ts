@@ -8,6 +8,7 @@ import type {
   Liability,
   NetWorthSnapshot,
   Settings,
+  LendBorrowTransaction,
 } from "@/types";
 
 const BASE = "/api";
@@ -38,6 +39,7 @@ export interface AllData {
   merchantMap: Record<string, string>;
   settings: Settings;
   aiSummary: { text: string; generatedAt: string; transactionCount: number } | null;
+  lendBorrowTransactions: LendBorrowTransaction[];
 }
 
 export const api = {
@@ -211,6 +213,23 @@ export const api = {
         body: JSON.stringify(data),
       }),
     clear: () => request("/ai-summary", { method: "DELETE" }),
+  },
+
+  // ─── Lend & Borrow ────────────────────────────────────────
+  lendBorrow: {
+    list: () => request<LendBorrowTransaction[]>("/lend-borrow"),
+    create: (data: LendBorrowTransaction) =>
+      request<LendBorrowTransaction>("/lend-borrow", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<LendBorrowTransaction>) =>
+      request<LendBorrowTransaction>(`/lend-borrow/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      request(`/lend-borrow/${id}`, { method: "DELETE" }),
   },
 
   // ─── Reset ────────────────────────────────────────────────

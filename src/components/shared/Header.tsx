@@ -67,6 +67,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/reports": "Reports",
   "/import": "Import CSV",
   "/settings": "Settings",
+  "/lend-borrow": "Lend & Borrow",
 };
 
 function useIsDark() {
