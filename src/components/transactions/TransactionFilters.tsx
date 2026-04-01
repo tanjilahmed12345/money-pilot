@@ -36,15 +36,13 @@ export function TransactionFilters({ filters, onChange, defaultFilters }: Transa
     filters.dateFrom !== "" ||
     filters.dateTo !== "" ||
     filters.amountMin !== "" ||
-    filters.amountMax !== "" ||
-    filters.source !== "all";
+    filters.amountMax !== "";
 
   const activeFilterCount = [
     filters.type !== "all",
     filters.categories.length > 0 || filters.category !== "",
     filters.dateFrom !== "" || filters.dateTo !== "",
     filters.amountMin !== "" || filters.amountMax !== "",
-    filters.source !== "all",
   ].filter(Boolean).length;
 
   return (
@@ -186,30 +184,6 @@ export function TransactionFilters({ filters, onChange, defaultFilters }: Transa
             </div>
           </div>
 
-          {/* Source filter */}
-          <div>
-            <label className="text-xs font-medium text-[var(--muted-foreground)] uppercase mb-2 block">Source</label>
-            <div className="flex gap-2">
-              {([
-                { value: "all", label: "All" },
-                { value: "regular", label: "Regular" },
-                { value: "lend-borrow", label: "Lend & Borrow" },
-              ] as const).map((s) => (
-                <button
-                  key={s.value}
-                  onClick={() => update({ source: s.value })}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                    filters.source === s.value
-                      ? "bg-[var(--primary)] text-white"
-                      : "bg-[var(--secondary)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-                  }`}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Sort */}
           <div>
             <label className="text-xs font-medium text-[var(--muted-foreground)] uppercase mb-2 block">Sort</label>
@@ -252,11 +226,6 @@ export function TransactionFilters({ filters, onChange, defaultFilters }: Transa
                 {(filters.amountMin || filters.amountMax) && (
                   <Badge color="#6b7280">
                     {filters.amountMin || "0"} — {filters.amountMax || "∞"}
-                  </Badge>
-                )}
-                {filters.source !== "all" && (
-                  <Badge color="#8b5cf6">
-                    {filters.source === "lend-borrow" ? "Lend & Borrow" : "Regular"}
                   </Badge>
                 )}
               </div>

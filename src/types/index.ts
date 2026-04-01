@@ -108,5 +108,4 @@ export interface FilterState {
   amountMax: string;
   sortBy: "date" | "amount";
   sortOrder: "asc" | "desc";
-  source: "all" | "regular" | "lend-borrow";
 }
