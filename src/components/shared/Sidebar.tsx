@@ -120,12 +120,12 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const sidebarContent = (
     <>
       {/* Logo */}
-      <div className="flex items-center gap-3 px-5 h-16 border-b border-[var(--border)] shrink-0">
+      <Link href="/dashboard" onClick={onMobileClose} className="flex items-center gap-3 px-5 h-16 border-b border-[var(--border)] shrink-0 hover:bg-[var(--accent)] transition-colors">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--primary)] to-blue-600 text-white font-bold text-sm">
           M
         </div>
         <span className="text-base font-semibold text-[var(--foreground)] tracking-tight">MoneyPilot</span>
-      </div>
+      </Link>
 
       {/* Nav sections */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
