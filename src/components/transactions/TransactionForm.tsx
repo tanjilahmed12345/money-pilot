@@ -35,6 +35,7 @@ const TYPE_CONFIG: { value: TransactionType; label: string; activeClass: string 
 export function TransactionForm({ editTransaction, onClose }: TransactionFormProps) {
   const categories = useStore((s) => s.categories);
   const merchantMap = useStore((s) => s.merchantMap);
+  const recurringTransactions = useStore((s) => s.recurringTransactions);
   const addTransaction = useStore((s) => s.addTransaction);
   const updateTransaction = useStore((s) => s.updateTransaction);
   const addRecurring = useStore((s) => s.addRecurring);
@@ -49,6 +50,8 @@ export function TransactionForm({ editTransaction, onClose }: TransactionFormPro
   const [notes, setNotes] = useState("");
   const [recurring, setRecurring] = useState(false);
   const [frequency, setFrequency] = useState<"daily" | "weekly" | "monthly" | "yearly">("monthly");
+  const [recurringMode, setRecurringMode] = useState<"pick" | "new">("pick");
+  const [selectedRecurringId, setSelectedRecurringId] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [autoSuggested, setAutoSuggested] = useState(false);
@@ -124,6 +127,19 @@ export function TransactionForm({ editTransaction, onClose }: TransactionFormPro
     }, 500);
   }, [merchantMap, categories, setMerchantCategory]);
 
+  const handleRecurringSelect = (id: string) => {
+    setSelectedRecurringId(id);
+    const tmpl = recurringTransactions.find((r) => r.id === id);
+    if (tmpl) {
+      setTitle(tmpl.title);
+      setAmount(String(tmpl.amount));
+      setType(tmpl.type);
+      setCategory(tmpl.category);
+      setNotes(tmpl.notes || "");
+      userOverrodeCategory.current = true;
+    }
+  };
+
   const handleCategoryChange = (value: string) => {
     setCategory(value);
     userOverrodeCategory.current = true;
@@ -174,7 +190,7 @@ export function TransactionForm({ editTransaction, onClose }: TransactionFormPro
       addTransaction(data);
       toast("Transaction added");
 
-      if (recurring) {
+      if (recurring && recurringMode === "new") {
         addRecurring({
           title: data.title,
           amount: data.amount,
@@ -301,19 +317,27 @@ export function TransactionForm({ editTransaction, onClose }: TransactionFormPro
         />
       </div>
 
-      {/* Recurring toggle */}
+      {/* Recurring section */}
       {!editTransaction && (
         <div className="rounded-lg border border-[var(--border)] px-4 py-3">
           <label className="flex items-center justify-between cursor-pointer">
             <div>
               <p className="text-sm font-medium text-[var(--foreground)]">Recurring</p>
-              <p className="text-xs text-[var(--muted-foreground)]">Also create a recurring template</p>
+              <p className="text-xs text-[var(--muted-foreground)]">
+                {recurringTransactions.length > 0
+                  ? "Pick a template or create new"
+                  : "Also create a recurring template"}
+              </p>
             </div>
             <button
               type="button"
               role="switch"
               aria-checked={recurring}
-              onClick={() => setRecurring(!recurring)}
+              onClick={() => {
+                setRecurring(!recurring);
+                setSelectedRecurringId("");
+                setRecurringMode(recurringTransactions.length > 0 ? "pick" : "new");
+              }}
               className={`relative h-6 w-11 rounded-full transition-colors ${
                 recurring ? "bg-[var(--primary)]" : "bg-[var(--secondary)]"
               }`}
@@ -325,20 +349,105 @@ export function TransactionForm({ editTransaction, onClose }: TransactionFormPro
               />
             </button>
           </label>
+
           {recurring && (
-            <div className="mt-3 pt-3 border-t border-[var(--border)]">
-              <Select
-                label="Frequency"
-                id="frequency"
-                value={frequency}
-                onChange={(e) => setFrequency(e.target.value as typeof frequency)}
-                options={[
-                  { value: "daily", label: "Daily" },
-                  { value: "weekly", label: "Weekly" },
-                  { value: "monthly", label: "Monthly" },
-                  { value: "yearly", label: "Yearly" },
-                ]}
-              />
+            <div className="mt-3 pt-3 border-t border-[var(--border)] space-y-3">
+              {/* Mode toggle — only if templates exist */}
+              {recurringTransactions.length > 0 && (
+                <div className="flex rounded-lg border border-[var(--border)] overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => { setRecurringMode("pick"); setSelectedRecurringId(""); }}
+                    className={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
+                      recurringMode === "pick"
+                        ? "bg-[var(--primary)] text-white"
+                        : "bg-[var(--card)] text-[var(--muted-foreground)] hover:bg-[var(--accent)]"
+                    }`}
+                  >
+                    From Template
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setRecurringMode("new"); setSelectedRecurringId(""); }}
+                    className={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
+                      recurringMode === "new"
+                        ? "bg-[var(--primary)] text-white"
+                        : "bg-[var(--card)] text-[var(--muted-foreground)] hover:bg-[var(--accent)]"
+                    }`}
+                  >
+                    Create New
+                  </button>
+                </div>
+              )}
+
+              {/* Pick from existing templates */}
+              {recurringMode === "pick" && recurringTransactions.length > 0 && (
+                <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                  {recurringTransactions
+                    .filter((r) => !r.paused)
+                    .map((r) => {
+                      const cat = categories.find((c) => c.id === r.category);
+                      const isSelected = selectedRecurringId === r.id;
+                      return (
+                        <button
+                          key={r.id}
+                          type="button"
+                          onClick={() => handleRecurringSelect(r.id)}
+                          className={`flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-left transition-all ${
+                            isSelected
+                              ? "bg-[var(--primary)]/10 border-2 border-[var(--primary)]"
+                              : "border border-[var(--border)] hover:bg-[var(--accent)]"
+                          }`}
+                        >
+                          <span
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm"
+                            style={{ backgroundColor: `${cat?.color || "#6b7280"}15` }}
+                          >
+                            {cat?.icon || "📦"}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-[var(--foreground)] truncate">{r.title}</p>
+                            <p className="text-[11px] text-[var(--muted-foreground)]">
+                              {cat?.name || "Other"} · {r.frequency}
+                            </p>
+                          </div>
+                          <span
+                            className="text-sm font-bold tabular-nums shrink-0"
+                            style={{ color: r.type === "income" ? "var(--success)" : "var(--destructive)" }}
+                          >
+                            {r.type === "income" ? "+" : "-"}{r.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                          </span>
+                          {isSelected && (
+                            <svg className="shrink-0 text-[var(--primary)]" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M20 6 9 17l-5-5" />
+                            </svg>
+                          )}
+                        </button>
+                      );
+                    })}
+                  {recurringTransactions.filter((r) => !r.paused).length === 0 && (
+                    <p className="text-xs text-[var(--muted-foreground)] text-center py-2">
+                      No active templates. Create one first.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Create new template — frequency picker */}
+              {recurringMode === "new" && (
+                <Select
+                  label="Frequency"
+                  id="frequency"
+                  value={frequency}
+                  onChange={(e) => setFrequency(e.target.value as typeof frequency)}
+                  options={[
+                    { value: "daily", label: "Daily" },
+                    { value: "weekly", label: "Weekly" },
+                    { value: "monthly", label: "Monthly" },
+                    { value: "yearly", label: "Yearly" },
+                  ]}
+                />
+              )}
             </div>
           )}
         </div>
