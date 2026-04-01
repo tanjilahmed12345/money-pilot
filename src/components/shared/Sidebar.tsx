@@ -33,13 +33,19 @@ const NAV_SECTIONS = [
   },
 ];
 
-// Flat list for mobile nav
+// Flat list for mobile nav — all items, scrollable
 const MOBILE_NAV = [
   { href: "/dashboard", label: "Home", icon: "LayoutDashboard" },
   { href: "/transactions", label: "Transactions", icon: "ArrowLeftRight" },
   { href: "/analytics", label: "Analytics", icon: "BarChart3" },
   { href: "/budget", label: "Budget", icon: "Wallet" },
+  { href: "/recurring", label: "Recurring", icon: "Repeat" },
   { href: "/goals", label: "Goals", icon: "Target" },
+  { href: "/net-worth", label: "Net Worth", icon: "TrendingUp" },
+  { href: "/calendar", label: "Calendar", icon: "CalendarDays" },
+  { href: "/reports", label: "Reports", icon: "FileText" },
+  { href: "/import", label: "Import", icon: "Upload" },
+  { href: "/settings", label: "Settings", icon: "Settings" },
 ];
 
 const icons: Record<string, React.ReactNode> = {
@@ -183,9 +189,9 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
         </div>
       )}
 
-      {/* Mobile Bottom Tab Bar — only top 5 items */}
+      {/* Mobile Bottom Tab Bar — scrollable */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 border-t border-[var(--border)] bg-[var(--card)]/95 backdrop-blur-md">
-        <div className="flex items-center justify-around px-1 py-1.5">
+        <div className="flex overflow-x-auto scrollbar-hide px-2 py-1.5 gap-1">
           {MOBILE_NAV.map((item) => {
             const active = pathname === item.href;
             return (
@@ -193,9 +199,9 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 rounded-lg px-3 py-1.5 min-w-0 text-[10px] font-medium transition-colors",
+                  "flex flex-col items-center shrink-0 rounded-lg px-3 py-1.5 min-w-[60px] text-[10px] font-medium transition-colors relative",
                   active
-                    ? "text-[var(--primary)]"
+                    ? "text-[var(--primary)] bg-[var(--primary)]/10"
                     : "text-[var(--muted-foreground)]"
                 )}
               >
@@ -205,10 +211,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
                 )}>
                   {icons[item.icon]}
                 </span>
-                <span className="truncate">{item.label}</span>
-                {active && (
-                  <span className="absolute bottom-0 w-8 h-0.5 rounded-full bg-[var(--primary)]" />
-                )}
+                <span className="mt-0.5 truncate max-w-[60px]">{item.label}</span>
               </Link>
             );
           })}
