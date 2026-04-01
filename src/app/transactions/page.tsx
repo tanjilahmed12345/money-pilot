@@ -22,6 +22,7 @@ const defaultFilters: FilterState = {
   amountMax: "",
   sortBy: "date",
   sortOrder: "desc",
+  source: "all",
 };
 
 function filtersFromParams(params: URLSearchParams): FilterState {
@@ -37,6 +38,7 @@ function filtersFromParams(params: URLSearchParams): FilterState {
     amountMax: params.get("amountMax") || "",
     sortBy: (params.get("sortBy") as "date" | "amount") || "date",
     sortOrder: (params.get("sortOrder") as "asc" | "desc") || "desc",
+    source: (params.get("source") as FilterState["source"]) || "all",
   };
 }
 
@@ -52,6 +54,7 @@ function filtersToParams(filters: FilterState): string {
   if (filters.amountMax) params.set("amountMax", filters.amountMax);
   if (filters.sortBy !== "date") params.set("sortBy", filters.sortBy);
   if (filters.sortOrder !== "desc") params.set("sortOrder", filters.sortOrder);
+  if (filters.source !== "all") params.set("source", filters.source);
   return params.toString();
 }
 
