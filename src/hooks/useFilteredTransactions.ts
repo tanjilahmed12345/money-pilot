@@ -12,7 +12,15 @@ export function useFilteredTransactions(
 
     if (filters.search) {
       const q = filters.search.toLowerCase();
-      result = result.filter((t) => t.title.toLowerCase().includes(q));
+      result = result.filter(
+        (t) => t.title.toLowerCase().includes(q) || t.notes.toLowerCase().includes(q)
+      );
+    }
+
+    if (filters.source === "lend-borrow") {
+      result = result.filter((t) => t.notes.includes("(Lend & Borrow)"));
+    } else if (filters.source === "regular") {
+      result = result.filter((t) => !t.notes.includes("(Lend & Borrow)"));
     }
 
     if (filters.type !== "all") {
