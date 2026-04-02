@@ -187,20 +187,20 @@ export default function RecurringPage() {
 
       {/* Summary */}
       {enriched.length > 0 && (
-        <div id="recurring-summary" className="grid grid-cols-3 gap-3 sm:gap-4">
-          <Card id="active-recurring">
-            <p className="text-[10px] sm:text-sm text-[var(--muted-foreground)]">Active</p>
-            <p className="mt-1 text-xl font-bold text-[var(--foreground)]">{activeCount}</p>
+        <div id="recurring-summary" className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+          <Card id="active-recurring" className="p-4 sm:p-6">
+            <p className="text-xs sm:text-sm text-[var(--muted-foreground)]">Active</p>
+            <p className="mt-1 text-lg sm:text-xl font-bold text-[var(--foreground)]">{activeCount}</p>
           </Card>
-          <Card id="monthly-cost">
-            <p className="text-sm text-[var(--muted-foreground)]">Est. Monthly Cost</p>
-            <p className="mt-1 text-xl font-bold text-[var(--destructive)] tabular-nums">
+          <Card id="monthly-cost" className="p-4 sm:p-6">
+            <p className="text-xs sm:text-sm text-[var(--muted-foreground)]">Est. Monthly Cost</p>
+            <p className="mt-1 text-lg sm:text-xl font-bold text-[var(--destructive)] tabular-nums">
               {formatCurrency(totalMonthly, currency)}
             </p>
           </Card>
-          <Card id="paused-recurring">
-            <p className="text-sm text-[var(--muted-foreground)]">Paused</p>
-            <p className="mt-1 text-xl font-bold text-[var(--muted-foreground)]">
+          <Card id="paused-recurring" className="p-4 sm:p-6">
+            <p className="text-xs sm:text-sm text-[var(--muted-foreground)]">Paused</p>
+            <p className="mt-1 text-lg sm:text-xl font-bold text-[var(--muted-foreground)]">
               {enriched.length - activeCount}
             </p>
           </Card>
@@ -226,85 +226,87 @@ export default function RecurringPage() {
             return (
               <div
                 key={r.id}
-                className={`flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-4 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 sm:px-4 py-3 transition-colors ${
+                className={`rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 sm:px-4 py-3 transition-colors ${
                   r.paused ? "opacity-50" : ""
                 }`}
               >
-                {/* Color indicator */}
-                <div className="w-1 h-10 rounded-full shrink-0" style={{ backgroundColor: tagColor }} />
-
-                {/* Icon */}
-                <div
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-lg"
-                  style={{ backgroundColor: `${cat?.color || "#6b7280"}15` }}
-                >
-                  {cat?.icon || "📦"}
+                {/* Top row: icon, title, amount */}
+                <div className="flex items-center gap-3">
+                  <div className="w-1 h-10 rounded-full shrink-0" style={{ backgroundColor: tagColor }} />
+                  <div
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-lg"
+                    style={{ backgroundColor: `${cat?.color || "#6b7280"}15` }}
+                  >
+                    {cat?.icon || "📦"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-[var(--card-foreground)] truncate">{r.title}</p>
+                      {r.paused && <Badge color="#6b7280">Paused</Badge>}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                      <Badge color={tagColor}>{TAG_LABELS[r.tag || "other"]}</Badge>
+                      <span className="text-xs text-[var(--muted-foreground)]">{FREQUENCY_LABELS[r.frequency]}</span>
+                    </div>
+                  </div>
+                  <span
+                    className="text-sm font-bold tabular-nums whitespace-nowrap shrink-0"
+                    style={{ color: r.type === "transfer" ? "var(--primary)" : r.type === "income" ? "var(--success)" : "var(--destructive)" }}
+                  >
+                    {r.type === "transfer" ? "↔ " : r.type === "income" ? "+" : "-"}{formatCurrency(r.amount, currency)}
+                  </span>
                 </div>
 
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold text-[var(--card-foreground)] truncate">{r.title}</p>
-                    {r.paused && <Badge color="#6b7280">Paused</Badge>}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 mt-0.5">
-                    <Badge color={tagColor}>{TAG_LABELS[r.tag || "other"]}</Badge>
-                    <span className="text-xs text-[var(--muted-foreground)]">{FREQUENCY_LABELS[r.frequency]}</span>
-                    {r.nextDue && !r.paused && (
-                      <span className={`text-xs font-medium ${
+                {/* Bottom row: due date + actions */}
+                <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-[var(--border)]">
+                  <div className="text-xs">
+                    {r.nextDue && !r.paused ? (
+                      <span className={`font-medium ${
                         r.overdue || r.due ? "text-[var(--destructive)]" : "text-[var(--muted-foreground)]"
                       }`}>
                         {daysText} · {formatDate(r.nextDue)}
                       </span>
+                    ) : (
+                      <span className="text-[var(--muted-foreground)]">{r.paused ? "Paused" : ""}</span>
                     )}
                   </div>
-                </div>
-
-                {/* Amount */}
-                <span
-                  className="text-sm font-bold tabular-nums whitespace-nowrap shrink-0"
-                  style={{ color: r.type === "transfer" ? "var(--primary)" : r.type === "income" ? "var(--success)" : "var(--destructive)" }}
-                >
-                  {r.type === "transfer" ? "↔ " : r.type === "income" ? "+" : "-"}{formatCurrency(r.amount, currency)}
-                </span>
-
-                {/* Actions */}
-                <div className="flex items-center gap-1 shrink-0">
-                  {!r.paused && (
-                    <Button variant="primary" size="sm" onClick={() => applyNow(r)}>
-                      Apply
-                    </Button>
-                  )}
-                  <button
-                    onClick={() => togglePause(r)}
-                    title={r.paused ? "Resume" : "Pause"}
-                    className={`rounded-lg p-1.5 transition-colors ${
-                      r.paused
-                        ? "text-[var(--success)] hover:bg-[var(--success)]/10"
-                        : "text-[var(--muted-foreground)] hover:bg-[var(--accent)]"
-                    }`}
-                  >
-                    {r.paused ? (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                        <polygon points="5 3 19 12 5 21 5 3" />
-                      </svg>
-                    ) : (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" />
-                      </svg>
+                  <div className="flex items-center gap-1">
+                    {!r.paused && (
+                      <Button variant="primary" size="sm" onClick={() => applyNow(r)}>
+                        Apply
+                      </Button>
                     )}
-                  </button>
-                  <Button variant="ghost" size="sm" onClick={() => openEdit(r)}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-                    </svg>
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => { deleteRecurring(r.id); toast("Template deleted"); }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--destructive)" strokeWidth="2">
-                      <path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                    </svg>
-                  </Button>
+                    <button
+                      onClick={() => togglePause(r)}
+                      title={r.paused ? "Resume" : "Pause"}
+                      className={`rounded-lg p-1.5 transition-colors ${
+                        r.paused
+                          ? "text-[var(--success)] hover:bg-[var(--success)]/10"
+                          : "text-[var(--muted-foreground)] hover:bg-[var(--accent)]"
+                      }`}
+                    >
+                      {r.paused ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                          <polygon points="5 3 19 12 5 21 5 3" />
+                        </svg>
+                      ) : (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" />
+                        </svg>
+                      )}
+                    </button>
+                    <Button variant="ghost" size="sm" onClick={() => openEdit(r)}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                      </svg>
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => { deleteRecurring(r.id); toast("Template deleted"); }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--destructive)" strokeWidth="2">
+                        <path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                      </svg>
+                    </Button>
+                  </div>
                 </div>
               </div>
             );
