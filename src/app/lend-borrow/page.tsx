@@ -170,22 +170,22 @@ export default function LendBorrowPage() {
   return (
     <div className="space-y-6">
       {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
-          <p className="text-[11px] sm:text-xs font-medium text-[var(--muted-foreground)]">Total Lent</p>
-          <p className="mt-1 text-lg sm:text-xl font-bold text-[var(--success)] tabular-nums truncate">
+          <p className="text-xs font-medium text-[var(--muted-foreground)]">Total Lent</p>
+          <p className="mt-1 text-lg sm:text-xl font-bold text-[var(--success)] tabular-nums">
             {formatCurrency(totalLent, currency)}
           </p>
         </div>
         <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
-          <p className="text-[11px] sm:text-xs font-medium text-[var(--muted-foreground)]">Total Borrowed</p>
-          <p className="mt-1 text-lg sm:text-xl font-bold text-[var(--destructive)] tabular-nums truncate">
+          <p className="text-xs font-medium text-[var(--muted-foreground)]">Total Borrowed</p>
+          <p className="mt-1 text-lg sm:text-xl font-bold text-[var(--destructive)] tabular-nums">
             {formatCurrency(totalBorrowed, currency)}
           </p>
         </div>
         <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
-          <p className="text-[11px] sm:text-xs font-medium text-[var(--muted-foreground)]">Net Balance</p>
-          <p className={`mt-1 text-lg sm:text-xl font-bold tabular-nums truncate ${
+          <p className="text-xs font-medium text-[var(--muted-foreground)]">Net Balance</p>
+          <p className={`mt-1 text-lg sm:text-xl font-bold tabular-nums ${
             netBalance > 0 ? "text-[var(--success)]" : netBalance < 0 ? "text-[var(--destructive)]" : "text-[var(--muted-foreground)]"
           }`}>
             {netBalance > 0 ? "+" : ""}{formatCurrency(netBalance, currency)}
