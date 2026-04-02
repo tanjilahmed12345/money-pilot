@@ -109,10 +109,7 @@ export default function BudgetPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">Budget</h1>
-          <p className="text-sm text-[var(--muted-foreground)] mt-1">{getMonthName(currentMonth)}</p>
-        </div>
+        <p className="text-sm font-medium text-[var(--muted-foreground)]">{getMonthName(currentMonth)}</p>
         <div className="flex gap-2">
           {prevMonthBudgets.length > 0 && monthBudgets.length === 0 && (
             <Button variant="secondary" onClick={copyLastMonth}>

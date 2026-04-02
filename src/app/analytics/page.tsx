@@ -54,11 +54,6 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">Analytics</h1>
-        <p className="text-sm text-[var(--muted-foreground)] mt-1">Visualize your financial data</p>
-      </div>
-
       {/* Tabs */}
       <div className="flex gap-1 border-b border-[var(--border)]">
         {(["overview", "trends"] as const).map((t) => (

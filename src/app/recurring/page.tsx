@@ -176,13 +176,7 @@ export default function RecurringPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">Recurring Transactions</h1>
-          <p className="text-sm text-[var(--muted-foreground)] mt-1">
-            Manage subscriptions, bills, and repeating payments
-          </p>
-        </div>
+      <div className="flex items-center justify-end">
         <Button onClick={openAdd}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M12 5v14M5 12h14" />

@@ -68,11 +68,6 @@ export default function CalendarPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">Calendar</h1>
-        <p className="text-sm text-[var(--muted-foreground)] mt-1">Daily expense overview</p>
-      </div>
-
       <Card id="calendar-view">
         <div className="flex items-center justify-between mb-6">
           <Button variant="ghost" onClick={prev}>

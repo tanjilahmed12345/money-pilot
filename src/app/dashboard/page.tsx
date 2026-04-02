@@ -24,10 +24,6 @@ const CashFlowTrend = dynamic(
 export default function DashboardPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">Dashboard</h1>
-        <p className="text-sm text-[var(--muted-foreground)] mt-1">Your financial overview</p>
-      </div>
       <div id="budget-alerts"><BudgetAlerts /></div>
       <div id="spending-anomalies"><SpendingAnomalyAlerts /></div>
       <div id="stat-cards"><StatCards /></div>

@@ -88,11 +88,6 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">Settings</h1>
-        <p className="text-sm text-[var(--muted-foreground)] mt-1">Customize your experience</p>
-      </div>
-
       {/* Appearance */}
       <Card id="appearance">
         <h2 className="text-lg font-semibold text-[var(--card-foreground)] mb-4">Appearance</h2>

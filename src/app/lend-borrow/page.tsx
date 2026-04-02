@@ -169,14 +169,6 @@ export default function LendBorrowPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">Lend & Borrow</h1>
-          <p className="text-sm text-[var(--muted-foreground)] mt-1">Track money you lend or borrow</p>
-        </div>
-      </div>
-
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-3">
         <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">

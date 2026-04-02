@@ -142,11 +142,6 @@ export default function NetWorthPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">Net Worth</h1>
-        <p className="text-sm text-[var(--muted-foreground)] mt-1">Track your assets, liabilities, and overall wealth</p>
-      </div>
-
       {/* Summary */}
       {hasData && (
         <div id="networth-summary" className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">

@@ -108,13 +108,6 @@ export default function ImportPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">Import Transactions</h1>
-        <p className="text-sm text-[var(--muted-foreground)] mt-1">
-          Import transactions from a CSV bank statement
-        </p>
-      </div>
-
       {step === "upload" && (
         <Card id="csv-upload">
           <div

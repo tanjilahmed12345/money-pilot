@@ -54,20 +54,20 @@ function searchIndex(query: string) {
   return Array.from(seen.values()).slice(0, 8);
 }
 
-// ─── Page title from path ────────────────────────────────────
-const PAGE_TITLES: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/transactions": "Transactions",
-  "/analytics": "Analytics",
-  "/budget": "Budget",
-  "/recurring": "Recurring",
-  "/goals": "Goals",
-  "/net-worth": "Net Worth",
-  "/calendar": "Calendar",
-  "/reports": "Reports",
-  "/import": "Import CSV",
-  "/settings": "Settings",
-  "/lend-borrow": "Lend & Borrow",
+// ─── Page title + subtitle from path ─────────────────────────
+const PAGE_META: Record<string, { title: string; subtitle: string }> = {
+  "/dashboard": { title: "Dashboard", subtitle: "Your financial overview" },
+  "/transactions": { title: "Transactions", subtitle: "Manage your income and expenses" },
+  "/analytics": { title: "Analytics", subtitle: "Visualize your financial data" },
+  "/budget": { title: "Budget", subtitle: "Set and track spending limits" },
+  "/recurring": { title: "Recurring", subtitle: "Subscriptions, bills & repeating payments" },
+  "/goals": { title: "Goals", subtitle: "Track your savings targets" },
+  "/net-worth": { title: "Net Worth", subtitle: "Assets, liabilities & overall wealth" },
+  "/calendar": { title: "Calendar", subtitle: "Daily expense overview" },
+  "/reports": { title: "Reports", subtitle: "Financial summaries and exports" },
+  "/import": { title: "Import CSV", subtitle: "Import transactions from a bank statement" },
+  "/settings": { title: "Settings", subtitle: "Customize your experience" },
+  "/lend-borrow": { title: "Lend & Borrow", subtitle: "Track money you lend or borrow" },
 };
 
 function useIsDark() {
@@ -107,7 +107,9 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   const results = searchIndex(query);
-  const pageTitle = PAGE_TITLES[pathname] || "MoneyPilot";
+  const pageMeta = PAGE_META[pathname];
+  const pageTitle = pageMeta?.title || "MoneyPilot";
+  const pageSubtitle = pageMeta?.subtitle;
 
   // Fetch user info
   useEffect(() => {
@@ -189,7 +191,8 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
     : "?";
 
   return (
-    <header className="sticky top-0 z-20 flex items-center h-16 px-4 sm:px-6 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-lg">
+    <header className="sticky top-0 z-20 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-lg">
+      <div className="mx-auto flex items-center h-16 max-w-7xl px-4 sm:px-6 lg:px-8">
       {/* Left: Mobile menu + Page title */}
       <div className="flex items-center gap-3 min-w-0">
         <button
@@ -201,7 +204,12 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
             <line x1="4" y1="6" x2="20" y2="6" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="18" x2="20" y2="18" />
           </svg>
         </button>
-        <h1 className="text-base font-semibold text-[var(--foreground)] truncate">{pageTitle}</h1>
+        <div className="min-w-0">
+          <h1 className="text-base font-semibold text-[var(--foreground)] truncate leading-tight">{pageTitle}</h1>
+          {pageSubtitle && (
+            <p className="text-[11px] text-[var(--muted-foreground)] truncate hidden sm:block">{pageSubtitle}</p>
+          )}
+        </div>
       </div>
 
       {/* Center: Search */}
@@ -367,6 +375,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
             </div>
           )}
         </div>
+      </div>
       </div>
     </header>
   );

@@ -172,12 +172,7 @@ export default function ReportsPage() {
   return (
     <div className="space-y-6">
       {/* Page header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">Reports</h1>
-          <p className="text-sm text-[var(--muted-foreground)] mt-1">Financial summaries and exports</p>
-        </div>
-
+      <div className="flex items-center justify-end">
         {/* Export dropdown */}
         <div ref={exportMenuRef} className="relative">
           <button
