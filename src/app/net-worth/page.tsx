@@ -199,18 +199,18 @@ export default function NetWorthPage() {
         ) : (
           <div className="space-y-2">
             {assets.map((a) => (
-              <div key={a.id} className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 sm:px-4 py-3">
+              <div key={a.id} className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 sm:px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">{a.icon}</span>
-                  <div>
-                    <p className="text-sm font-medium text-[var(--card-foreground)]">{a.name}</p>
+                  <span className="text-xl shrink-0">{a.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-[var(--card-foreground)] truncate">{a.name}</p>
                     <Badge color="#22c55e">{ASSET_OPTIONS.find((o) => o.value === a.type)?.label || a.type}</Badge>
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-[var(--success)] tabular-nums">
+                  <span className="text-sm font-bold text-[var(--success)] tabular-nums whitespace-nowrap shrink-0">
                     {formatCurrency(a.amount, currency)}
                   </span>
+                </div>
+                <div className="flex items-center justify-end gap-1 mt-2 pt-2 border-t border-[var(--border)] sm:mt-0 sm:pt-0 sm:border-t-0">
                   <Button variant="ghost" size="sm" onClick={() => openEditAsset(a)}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
@@ -241,18 +241,18 @@ export default function NetWorthPage() {
         ) : (
           <div className="space-y-2">
             {liabilities.map((l) => (
-              <div key={l.id} className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 sm:px-4 py-3">
+              <div key={l.id} className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 sm:px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">{l.icon}</span>
-                  <div>
-                    <p className="text-sm font-medium text-[var(--card-foreground)]">{l.name}</p>
+                  <span className="text-xl shrink-0">{l.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-[var(--card-foreground)] truncate">{l.name}</p>
                     <Badge color="#ef4444">{LIABILITY_OPTIONS.find((o) => o.value === l.type)?.label || l.type}</Badge>
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-[var(--destructive)] tabular-nums">
+                  <span className="text-sm font-bold text-[var(--destructive)] tabular-nums whitespace-nowrap shrink-0">
                     {formatCurrency(l.amount, currency)}
                   </span>
+                </div>
+                <div className="flex items-center justify-end gap-1 mt-2 pt-2 border-t border-[var(--border)] sm:mt-0 sm:pt-0 sm:border-t-0">
                   <Button variant="ghost" size="sm" onClick={() => openEditLiability(l)}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
