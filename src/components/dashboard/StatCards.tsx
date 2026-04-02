@@ -21,6 +21,7 @@ interface StatCardData {
   icon: string;
   change: number | null;
   invertDirection?: boolean;
+  accent: string;
 }
 
 function ChangeBadge({ change, invert }: { change: number | null; invert?: boolean }) {
@@ -71,12 +72,14 @@ export function StatCards() {
         value: formatCurrency(balance, currency),
         icon: "💳",
         change: balanceChange,
+        accent: "#3b82f6",
       },
       {
         title: "Monthly Income",
         value: formatCurrency(monthIncome, currency),
         icon: "📈",
         change: getPercentChange(monthIncome, lastIncome),
+        accent: "#22c55e",
       },
       {
         title: "Monthly Expenses",
@@ -84,12 +87,14 @@ export function StatCards() {
         icon: "📉",
         change: getPercentChange(monthExpense, lastExpense),
         invertDirection: true,
+        accent: "#ef4444",
       },
       {
         title: "Savings Rate",
         value: `${savingsRate.toFixed(1)}%`,
         icon: "🏦",
         change: getPercentChange(savingsRate, lastSavingsRate),
+        accent: "#a855f7",
       },
     ] satisfies StatCardData[];
   }, [transactions, currency]);
@@ -97,7 +102,7 @@ export function StatCards() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {stats.map((stat) => (
-        <Card key={stat.title}>
+        <Card key={stat.title} accent={stat.accent}>
           <div className="flex items-center justify-between">
             <CardTitle>{stat.title}</CardTitle>
             <span className="text-2xl">{stat.icon}</span>

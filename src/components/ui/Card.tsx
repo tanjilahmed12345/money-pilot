@@ -7,18 +7,22 @@ interface CardProps {
   className?: string;
   id?: string;
   onClick?: () => void;
+  accent?: string;
 }
 
-export function Card({ children, className, id, onClick }: CardProps) {
+export function Card({ children, className, id, onClick, accent }: CardProps) {
   return (
     <div
       id={id}
       onClick={onClick}
       className={cn(
-        "rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm transition-shadow hover:shadow-md",
+        "rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm transition-all hover:shadow-md",
         onClick && "cursor-pointer",
         className
       )}
+      style={accent ? {
+        backgroundColor: `color-mix(in srgb, ${accent} 6%, var(--card))`,
+      } : undefined}
     >
       {children}
     </div>

@@ -16,6 +16,11 @@ const SpendingBreakdown = dynamic(
   { ssr: false, loading: () => <ChartSkeleton /> }
 );
 
+const CashFlowTrend = dynamic(
+  () => import("@/components/dashboard/CashFlowTrend").then((m) => m.CashFlowTrend),
+  { ssr: false, loading: () => <ChartSkeleton /> }
+);
+
 export default function DashboardPage() {
   return (
     <div className="space-y-6">
@@ -34,8 +39,11 @@ export default function DashboardPage() {
           <div id="top-spending"><TopSpending /></div>
         </div>
       </div>
+      <div id="charts" className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div id="spending-breakdown"><SpendingBreakdown /></div>
+        <div id="cash-flow-trend"><CashFlowTrend /></div>
+      </div>
       <div id="ai-insight"><AiSpendingSummary /></div>
-      <div id="spending-breakdown"><SpendingBreakdown /></div>
     </div>
   );
 }
