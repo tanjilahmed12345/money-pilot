@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, FormEvent } from "react";
+import { Logo } from "@/components/ui/Logo";
 
 type AuthTab = "login" | "register" | "forgot";
 
@@ -155,11 +156,11 @@ export default function AuthPage() {
           {/* Logo */}
           <div className="text-center mb-8">
             <div
-              className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[var(--primary)] text-white text-2xl font-bold mb-4 transition-all duration-500 ${
+              className={`inline-flex items-center justify-center mb-4 transition-all duration-500 ${
                 mounted ? "rotate-0 scale-100" : "rotate-[-180deg] scale-0"
               }`}
             >
-              M₿
+              <Logo size={64} />
             </div>
             <h1
               className={`text-2xl font-bold text-[var(--foreground)] transition-all duration-500 delay-200 ${
